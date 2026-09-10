@@ -24,6 +24,16 @@ read -r -p "Type 'destroy' to continue: " CONFIRM
 [ "$CONFIRM" = "destroy" ] || { echo "Aborted."; exit 1; }
 
 echo "==> Destroying DAB-managed resources..."
+# Pass the same vars used at deploy so bundle validation (which destroy runs) passes
+# — notably warehouse_id, whose databricks.yml default is empty.
+export BUNDLE_VAR_catalog="$CATALOG" BUNDLE_VAR_schema="$SCHEMA" \
+  BUNDLE_VAR_lakebase_project="$PROJECT" BUNDLE_VAR_warehouse_id="${WAREHOUSE_ID:-}" \
+  BUNDLE_VAR_llm_endpoint="${LLM_ENDPOINT:-databricks-gemini-3-5-flash}" \
+  BUNDLE_VAR_embedding_endpoint="${EMBEDDING_ENDPOINT:-databricks-qwen3-embedding-0-6b}" \
+  BUNDLE_VAR_gateway_service_id="${GATEWAY_SERVICE_ID:-sentiva_llm}" \
+  BUNDLE_VAR_mlflow_experiment="${MLFLOW_EXPERIMENT:-/Shared/sentiva-rag-traces}" \
+  BUNDLE_VAR_volume="${VOLUME:-raw_docs}" \
+  BUNDLE_VAR_app_a_name="${APP_A_NAME:-sentiva-agent-api}" BUNDLE_VAR_app_b_name="${APP_B_NAME:-sentiva-web}"
 databricks bundle destroy -t dev --profile "$PROFILE" --auto-approve || echo "   (bundle destroy skipped/failed — continuing)"
 
 echo "==> Deleting Unity AI Gateway model-service (if present)..."

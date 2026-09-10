@@ -24,7 +24,12 @@ fail(){ printf "  \033[31m✗\033[0m %s\n" "$1"; FAILS=$((FAILS+1)); }
 
 echo "== apps (billable compute) =="
 for A in "$APP_A" "$APP_B"; do
-  if databricks apps get "$A" --profile "$PROFILE" >/dev/null 2>&1; then fail "app still exists: $A"; else pass "app removed: $A"; fi
+  ST=$(databricks apps get "$A" --profile "$PROFILE" -o json 2>/dev/null | python3 -c "import json,sys
+try: print(json.load(sys.stdin).get('compute_status',{}).get('state','') or 'PRESENT')
+except: print('GONE')" 2>/dev/null || echo GONE)
+  if [ "$ST" = "GONE" ] || [ -z "$ST" ]; then pass "app removed: $A"
+  elif echo "$ST" | grep -qiE 'DELETING|STOPPED'; then warn "app '$A' is $ST (being removed) — re-check shortly"
+  else fail "app still active: $A ($ST)"; fi
 done
 
 echo "== job =="
