@@ -83,8 +83,8 @@ docs/                     DEPLOYMENT.md · DEMO.md · UI_REQUIRED_STEPS.md
 ## Deploy / run / test
 
 See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for the full, ordered steps (including the two
-manual UI toggles), **[docs/DEMO.md](docs/DEMO.md)** for the demo walkthrough (UI, API, tracing,
-dashboard), and **[docs/UI_REQUIRED_STEPS.md](docs/UI_REQUIRED_STEPS.md)** for the UI-only settings.
+manual UI toggles in its Prerequisites) and **[docs/DEMO.md](docs/DEMO.md)** for the demo
+walkthrough (UI, API, tracing, dashboard).
 
 TL;DR: `cp config.env.example config.env` → edit it → follow docs/DEPLOYMENT.md
 (`preflight → bootstrap → [UI toggles] → bootstrap_search → create_gateway → build UI → deploy → run ingest`)

@@ -95,9 +95,12 @@ source config.env
 ./scripts/teardown.sh "$PROFILE" "$CATALOG" "$LAKEBASE_PROJECT" --drop-catalog  # 連 catalog 一起刪
 ```
 teardown:`bundle destroy`(schema/volume/jobs/apps/dashboard)→ 刪 AI Gateway model-service → drop inference table → 刪 Lakebase project → (選)刪 catalog。
-> 成本備註:Lakebase suspend timeout 預設 24h(CLI 改不動);demo 結束務必 teardown。詳見 UI_REQUIRED_STEPS.md。
+> 成本備註:Lakebase suspend timeout 預設 24h(CLI 改不動);demo 結束務必 teardown(見 §5)。
 
 ---
 
-## 5. 需 UI 的項目
-見 [UI_REQUIRED_STEPS.md](UI_REQUIRED_STEPS.md):Lakebase Search 啟用、AI Prep Search preview、(選)Lakebase suspend timeout。
+## 5. 需 UI 的項目(彙整)
+CLI 無法設定、必須在 workspace UI 手動處理(`preflight.sh --full` 會驗證前兩項):
+1. **Lakebase Search** — 見 §1(Enable Lakebase Search)。
+2. **AI Prep Search preview** — 見 §1(Previews → AI Prep Search)。
+3. (選)**Lakebase suspend timeout** — 預設 24h 才 scale-to-zero;CLI 改不動。要更省成本可在 Lakebase 的 compute 設定調短,或直接靠 §4 teardown 移除。

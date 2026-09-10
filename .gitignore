@@ -3,9 +3,10 @@
 config.env
 .databrickscfg
 
-# --- internal working notes (contain env IDs / customer context) ---
+# --- internal working notes (not for the public repo) ---
 PROGRESS.md
 docs/PLAN.md
+docs/UI_REQUIRED_STEPS.md
 
 # --- local tooling / IDE ---
 .claude/
