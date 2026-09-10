@@ -9,9 +9,11 @@
 # Usage: scripts/bootstrap_search.sh [PROFILE] [LAKEBASE_PROJECT]
 # ==============================================================================
 set -euo pipefail
+HERE="$(cd "$(dirname "$0")" && pwd)"
+[ -f "$HERE/../config.env" ] && source "$HERE/../config.env"
 
-PROFILE="${1:-DEFAULT}"
-PROJECT="${2:-sentiva-rag}"
+PROFILE="${1:-${PROFILE:-DEFAULT}}"
+PROJECT="${2:-${LAKEBASE_PROJECT_ACTUAL:-${LAKEBASE_PROJECT:-sentiva-rag}}}"
 
 first_name() { python3 -c "import json,sys; d=json.load(sys.stdin); d=d if isinstance(d,list) else next(iter(d.values())); print(d[0]['name'])"; }
 

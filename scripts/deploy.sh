@@ -11,6 +11,8 @@ set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
 source "$ROOT/config.env"
+# Use the actual (suffixed) Lakebase project recorded by bootstrap.sh, if any.
+LAKEBASE_PROJECT="${LAKEBASE_PROJECT_ACTUAL:-${LAKEBASE_PROJECT:-sentiva-rag}}"
 
 # Preflight: verify prerequisites before deploying (skip with SKIP_PREFLIGHT=1).
 if [ "${SKIP_PREFLIGHT:-0}" != "1" ]; then

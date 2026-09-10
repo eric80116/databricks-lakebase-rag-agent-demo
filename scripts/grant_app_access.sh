@@ -13,7 +13,7 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 
 PROFILE="${1:-${PROFILE:-DEFAULT}}"
 APP="${2:-sentiva-agent-api}"
-PROJECT="${3:-${LAKEBASE_PROJECT:-sentiva-rag}}"
+PROJECT="${3:-${LAKEBASE_PROJECT_ACTUAL:-${LAKEBASE_PROJECT:-sentiva-rag}}}"
 
 first_name() { python3 -c "import json,sys; d=json.load(sys.stdin); d=d if isinstance(d,list) else next(iter(d.values())); print(d[0]['name'])"; }
 

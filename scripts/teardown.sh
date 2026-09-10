@@ -13,8 +13,9 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 
 PROFILE="${1:-${PROFILE:-DEFAULT}}"
 CATALOG="${2:-${CATALOG:-dbx_agent_lakebase}}"
-PROJECT="${3:-${LAKEBASE_PROJECT:-sentiva-rag}}"
+PROJECT="${3:-${LAKEBASE_PROJECT_ACTUAL:-${LAKEBASE_PROJECT:-sentiva-rag}}}"
 DROP_CATALOG="${4:-}"
+CONFIG_FILE="$HERE/../config.env"
 SCHEMA="${SCHEMA:-rag}"
 GATEWAY_SERVICE_ID="${GATEWAY_SERVICE_ID:-sentiva_llm}"
 
@@ -33,6 +34,12 @@ databricks experimental aitools tools query "DROP TABLE IF EXISTS ${CATALOG}.${S
 echo "==> Deleting Lakebase project '$PROJECT' (all branches/data)..."
 databricks postgres delete-project "projects/$PROJECT" --profile "$PROFILE" 2>/dev/null \
   || echo "   (not present or already deleted)"
+# Clear the recorded actual name so the NEXT bootstrap creates a fresh suffixed project
+# (a deleted Lakebase project name lingers/reserved for a while — avoids collision).
+if [ -f "$CONFIG_FILE" ] && grep -q '^export LAKEBASE_PROJECT_ACTUAL=' "$CONFIG_FILE"; then
+  sed -i.bak '/^export LAKEBASE_PROJECT_ACTUAL=/d; /^# Auto-managed by bootstrap.sh/d' "$CONFIG_FILE" && rm -f "$CONFIG_FILE.bak"
+  echo "==> Cleared LAKEBASE_PROJECT_ACTUAL from config.env (next deploy uses a new suffix)."
+fi
 
 if [ "$DROP_CATALOG" = "--drop-catalog" ]; then
   echo "==> Dropping catalog '$CATALOG' (CASCADE)..."

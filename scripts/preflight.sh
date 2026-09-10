@@ -22,6 +22,7 @@ fail(){ printf "  \033[31m✗\033[0m %s\n" "$1"; FAILS=$((FAILS+1)); }
 echo "== config.env =="
 if [ -f "$ROOT/config.env" ]; then source "$ROOT/config.env"; pass "config.env loaded"; else fail "config.env missing"; fi
 PROFILE="${PROFILE:-DEFAULT}"; CATALOG="${CATALOG:-dbx_agent_lakebase}"; SCHEMA="${SCHEMA:-rag}"
+LAKEBASE_PROJECT="${LAKEBASE_PROJECT_ACTUAL:-${LAKEBASE_PROJECT:-sentiva-rag}}"
 for v in PROFILE CATALOG SCHEMA LAKEBASE_PROJECT WAREHOUSE_ID LLM_ENDPOINT EMBEDDING_ENDPOINT GATEWAY_SERVICE_ID; do
   [ -n "${!v:-}" ] && pass "config: $v=${!v}" || fail "config: $v not set"
 done

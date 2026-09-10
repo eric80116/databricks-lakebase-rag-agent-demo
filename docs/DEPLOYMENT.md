@@ -90,12 +90,13 @@ pytest tests/ -v            # 只跑 13 項測試(需已裝 pytest;見 tests/REA
 
 ## 4. 清除(避免非預期花費)
 ```bash
-source config.env
-./scripts/teardown.sh "$PROFILE" "$CATALOG" "$LAKEBASE_PROJECT"            # 保留 catalog
-./scripts/teardown.sh "$PROFILE" "$CATALOG" "$LAKEBASE_PROJECT" --drop-catalog  # 連 catalog 一起刪
+./scripts/teardown.sh                 # 讀 config.env;保留 catalog
+./scripts/teardown.sh "" "" "" --drop-catalog   # 連 catalog 一起刪
+./scripts/verify_teardown.sh          # 驗證所有(會計費)資源都已移除
 ```
-teardown:`bundle destroy`(schema/volume/jobs/apps/dashboard)→ 刪 AI Gateway model-service → drop inference table → 刪 Lakebase project → (選)刪 catalog。
-> 成本備註:Lakebase suspend timeout 預設 24h(CLI 改不動);demo 結束務必 teardown(見 §5)。
+teardown:`bundle destroy`(schema/volume/jobs/apps/dashboard)→ 刪 AI Gateway model-service → drop inference table → 刪 Lakebase project → 清除 config.env 的 `LAKEBASE_PROJECT_ACTUAL` → (選)刪 catalog。
+> **Lakebase 專案名稱防呆**:`bootstrap.sh` 會建立 `<LAKEBASE_PROJECT>-<隨機>` 並把實際名稱記到 config.env 的 `LAKEBASE_PROJECT_ACTUAL`(所有後續階段都用它)。因為已刪除的 Lakebase 專案名稱會保留一段時間,teardown 會清掉該記錄,**下次部署自動用新後綴、不會撞名**。
+> 成本備註:Lakebase suspend timeout 預設 24h(CLI 改不動);demo 結束務必 teardown + verify(見 §5)。
 
 ---
 

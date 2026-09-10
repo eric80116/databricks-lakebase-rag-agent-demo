@@ -18,8 +18,9 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 
 PROFILE="${1:-${PROFILE:-DEFAULT}}"
 CATALOG="${2:-${CATALOG:-dbx_agent_lakebase}}"
-PROJECT="${3:-${LAKEBASE_PROJECT:-sentiva-rag}}"
+PROJECT_BASE="${3:-${LAKEBASE_PROJECT:-sentiva-rag}}"
 STORAGE_ROOT="${CATALOG_STORAGE_ROOT:-}"
+CONFIG_FILE="$HERE/../config.env"
 
 echo "==> [STAGE 1] Profile=$PROFILE  Catalog=$CATALOG  LakebaseProject=$PROJECT"
 
@@ -46,18 +47,31 @@ else
 fi
 
 # --- 2. Lakebase project ----------------------------------------------------
-PROJECT_EXISTS=$(databricks postgres list-projects --profile "$PROFILE" -o json 2>/dev/null | python3 -c "
+# A deleted Lakebase project name lingers (reserved) for a while, so reusing a fixed
+# name after teardown collides. We create "<base>-<random>" and record the actual name
+# in config.env (LAKEBASE_PROJECT_ACTUAL); all later stages + teardown read that.
+proj_exists() {
+  databricks postgres list-projects --profile "$PROFILE" -o json 2>/dev/null | python3 -c "
 import json,sys
 d=json.load(sys.stdin); ps=d if isinstance(d,list) else d.get('projects',[])
-print('yes' if any(p.get('project_id')=='$PROJECT' for p in ps) else 'no')" 2>/dev/null || echo no)
+print('yes' if any(p.get('project_id')=='$1' for p in ps) else 'no')" 2>/dev/null || echo no
+}
 
-if [ "$PROJECT_EXISTS" = "yes" ]; then
-  echo "==> Lakebase project '$PROJECT' already exists."
+PROJECT="${LAKEBASE_PROJECT_ACTUAL:-}"
+if [ -n "$PROJECT" ] && [ "$(proj_exists "$PROJECT")" = "yes" ]; then
+  echo "==> Reusing Lakebase project '$PROJECT' (recorded in config.env)."
 else
+  PROJECT="${PROJECT_BASE}-$(python3 -c 'import secrets;print(secrets.token_hex(3))')"
   echo "==> Creating Lakebase project '$PROJECT' (a few minutes)..."
   databricks postgres create-project "$PROJECT" \
     --json "{\"spec\": {\"display_name\": \"Sentiva RAG Demo\"}}" \
     --profile "$PROFILE" >/dev/null
+  if grep -q '^export LAKEBASE_PROJECT_ACTUAL=' "$CONFIG_FILE" 2>/dev/null; then
+    sed -i.bak "s#^export LAKEBASE_PROJECT_ACTUAL=.*#export LAKEBASE_PROJECT_ACTUAL=\"$PROJECT\"#" "$CONFIG_FILE" && rm -f "$CONFIG_FILE.bak"
+  else
+    printf '\n# Auto-managed by bootstrap.sh — actual (suffixed) Lakebase project. Removed by teardown.sh.\nexport LAKEBASE_PROJECT_ACTUAL="%s"\n' "$PROJECT" >> "$CONFIG_FILE"
+  fi
+  echo "==> Recorded LAKEBASE_PROJECT_ACTUAL=$PROJECT in config.env"
 fi
 
 cat <<EOF
