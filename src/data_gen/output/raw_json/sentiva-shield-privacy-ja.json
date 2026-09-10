@@ -1,0 +1,24 @@
+{
+  "doc_id": "sentiva-shield-privacy-ja",
+  "product": "Sentiva Shield",
+  "lang": "ja",
+  "category": "privacy",
+  "title": "Sentiva Shield - プライバシーとデータ処理",
+  "source_uri": "sentiva-kb://shield/privacy",
+  "body": "Sentivaではプライバシーを真摯に受け止めています。Sentiva Shieldはセキュリティ操作に必要な最小限の個人データのみを収集します：\n\n**収集するデータ:**\n- デバイス識別子\n- 脅威検出ログ\n- IP住所と位置情報（概算）\n- アプリケーション使用パターン（匿名化）\n\n**収集しないデータ:**\n- ブラウジング履歴\n- 個人ファイルまたはドキュメント\n- パスワードまたは支払い情報\n- メール内容\n\n**セキュリティ対策:**\n- 転送中のデータはTLS 1.3で暗号化\n- サーバー上の暗号化ストレージ\n- 明示的な同意なしに第三者との共有なし\n- 90日後の自動削除",
+  "faqs": [],
+  "metadata": {
+    "plan_tiers": [
+      "Basic",
+      "Plus",
+      "Premium"
+    ],
+    "supported_platforms": [
+      "Windows",
+      "macOS",
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

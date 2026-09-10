@@ -1,0 +1,24 @@
+{
+  "doc_id": "sentiva-shield-troubleshooting-de",
+  "product": "Sentiva Shield",
+  "lang": "de",
+  "category": "troubleshooting",
+  "title": "Sentiva Shield - Fehlerbehebungsanleitung",
+  "source_uri": "sentiva-kb://shield/troubleshooting",
+  "body": "**Häufige Probleme und Lösungen:**\n\nF: Shield wird nach der Installation nicht gestartet\nA: Starten Sie Ihren Computer neu. Wenn das Problem weiterhin besteht, deinstallieren und reinstallieren Sie es, um sicherzustellen, dass Sie über Administratorrechte verfügen.\n\nF: Es treten falsch positive Erkennungen auf\nA: Überprüfen Sie die erkannten Dateien in Quarantäne. Fügen Sie sichere Dateien über Einstellungen > Ausschlüsse hinzu.\n\nF: Hohe CPU-Auslastung\nA: Deaktivieren Sie die Echtzeitanalyse während Aufgaben. Konfigurieren Sie geplante Scans über Einstellungen > Scan-Zeitplan.\n\nF: Der Lizenzschlüssel wird nicht akzeptiert\nA: Stellen Sie sicher, dass der Schlüssel korrekt eingegeben wird. Überprüfen Sie, ob die Lizenz abgelaufen ist.",
+  "faqs": [],
+  "metadata": {
+    "plan_tiers": [
+      "Basic",
+      "Plus",
+      "Premium"
+    ],
+    "supported_platforms": [
+      "Windows",
+      "macOS",
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

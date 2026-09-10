@@ -1,0 +1,24 @@
+{
+  "doc_id": "sentiva-shield-pricing-ja",
+  "product": "Sentiva Shield",
+  "lang": "ja",
+  "category": "pricing",
+  "title": "Sentiva Shield - 価格プラン",
+  "source_uri": "sentiva-kb://shield/pricing",
+  "body": "ニーズに合ったSentiva Shieldプランを選択してください：\n\n**ベーシックプラン** - ¥3,980/年（単一デバイス）\n- リアルタイムアンチウイルス保護\n- マルウェアとスパイウェア検出\n- 自動更新\n- メールサポート\n\n**プラスプラン** - ¥6,980/年（最大5デバイス）\n- ベーシックの全機能に加えて：\n- 高度なランサムウェア保護\n- ウェブ保護とフィッシング防御\n- VPNサービス（1日100MB）\n- 優先サポート\n\n**プレミアムプラン** - ¥10,980/年（無制限デバイス）\n- プラスの全機能に加えて：\n- 無制限VPN使用\n- パスワードマネージャー\n- 安全なファイル削除\n- システム最適化ツール",
+  "faqs": [],
+  "metadata": {
+    "plan_tiers": [
+      "Basic",
+      "Plus",
+      "Premium"
+    ],
+    "supported_platforms": [
+      "Windows",
+      "macOS",
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

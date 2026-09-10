@@ -1,0 +1,17 @@
+{
+  "doc_id": "sentiva-alert-pricing-en",
+  "product": "Sentiva Alert",
+  "lang": "en",
+  "category": "pricing",
+  "title": "Sentiva Alert - Pricing Plans",
+  "source_uri": "sentiva-kb://alert/pricing",
+  "body": "**Free Plan**\n- Basic SMS scam detection\n- Call screening (limited to known threats)\n- Mobile app with notifications\n- Web portal access\n\n**Plus Plan** - $9.99/month\n- Everything in Free, plus:\n- Advanced fraud URL detection\n- Deepfake audio detection\n- Enhanced call analysis\n- Priority support\n- Monthly fraud report\n- Up to 3 phone numbers\n\n**Premium Plan** - $19.99/month\n- Everything in Plus, plus:\n- Unlimited phone numbers\n- Family protection (5 users)\n- Dark web monitoring for your phone number\n- Custom fraud rules\n- Real-time chat support\n- Quarterly security briefings",
+  "faqs": [],
+  "metadata": {
+    "supported_platforms": [
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

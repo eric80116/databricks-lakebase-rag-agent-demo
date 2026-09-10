@@ -1,0 +1,17 @@
+{
+  "doc_id": "sentiva-alert-features-ja",
+  "product": "Sentiva Alert",
+  "lang": "ja",
+  "category": "features",
+  "title": "Sentiva Alert - 主要機能",
+  "source_uri": "sentiva-kb://alert/features",
+  "body": "**SMS・メッセージ保護**\n- リアルタイムテキストメッセージ詐欺検出\n- メッセージ内のURL スキャン\n- 送信者評判分析\n- 疑わしいパターン認識\n\n**通話スクリーニング**\n- 着信通話検証\n- なりすまし通話検出\n- 音声パターン分析\n- 既知の詐欺師データベース\n\n**ディープフェイク検出**\n- 音声ディープフェイク分析\n- ビデオディープフェイク警告",
+  "faqs": [],
+  "metadata": {
+    "supported_platforms": [
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

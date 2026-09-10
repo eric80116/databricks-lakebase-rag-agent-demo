@@ -1,0 +1,17 @@
+{
+  "doc_id": "sentiva-alert-features-fr",
+  "product": "Sentiva Alert",
+  "lang": "fr",
+  "category": "features",
+  "title": "Sentiva Alert - Caractéristiques Clés",
+  "source_uri": "sentiva-kb://alert/features",
+  "body": "**Protection des SMS et des Messages**\n- Détection des arnaquages par message texte en temps réel\n- Analyse des URL dans les messages\n- Analyse de la réputation de l'expéditeur\n- Reconnaissance des modèles suspects\n\n**Filtrage des Appels**\n- Vérification des appels entrants\n- Détection des appels usurpés\n- Analyse des modèles vocaux\n- Base de données des arnaqueurs connus\n\n**Détection des Deepfakes**\n- Analyse des deepfakes audio\n- Alertes vidéo deepfake",
+  "faqs": [],
+  "metadata": {
+    "supported_platforms": [
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

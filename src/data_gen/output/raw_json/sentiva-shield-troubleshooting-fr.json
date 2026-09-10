@@ -1,0 +1,24 @@
+{
+  "doc_id": "sentiva-shield-troubleshooting-fr",
+  "product": "Sentiva Shield",
+  "lang": "fr",
+  "category": "troubleshooting",
+  "title": "Sentiva Shield - Guide de Dépannage",
+  "source_uri": "sentiva-kb://shield/troubleshooting",
+  "body": "**Problèmes Courants et Solutions :**\n\nQ: Shield ne démarre pas après l'installation\nA: Redémarrez votre ordinateur. Si le problème persiste, désinstallez et réinstallez en veillant à disposer des droits d'administrateur.\n\nQ: Des détections fausses positives se produisent\nA: Vérifiez les fichiers détectés dans Quarantaine. Ajoutez les fichiers sûrs aux exclusions via Paramètres > Exclusions.\n\nQ: Utilisation élevée du CPU\nA: Désactivez l'analyse en temps réel lors des tâches. Configurez les analyses programmées en Paramètres > Calendrier d'analyse.\n\nQ: La clé de licence n'est pas acceptée\nA: Assurez-vous que la clé est saisie correctement. Vérifiez si la licence a expiré.",
+  "faqs": [],
+  "metadata": {
+    "plan_tiers": [
+      "Basic",
+      "Plus",
+      "Premium"
+    ],
+    "supported_platforms": [
+      "Windows",
+      "macOS",
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

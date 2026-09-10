@@ -1,0 +1,29 @@
+{
+  "doc_id": "sentiva-shield-features-en",
+  "product": "Sentiva Shield",
+  "lang": "en",
+  "category": "features",
+  "title": "Sentiva Shield - Key Features",
+  "source_uri": "sentiva-kb://shield/features",
+  "body": "**Core Protection**\n- Real-time threat detection powered by machine learning\n- Advanced malware & ransomware scanning\n- Zero-day exploit prevention\n- Boot-time scanning\n\n**Web & Network Security**\n- Blocks malicious websites and phishing attempts\n- Safe browsing alerts\n- DNS-level protection\n- Public Wi-Fi security\n\n**Device Management**\n- Unified dashboard for multiple devices\n- Remote device lock capability\n- Lost device tracking\n- Installation manager for safe downloads\n\n**Performance**\n- Lightweight agent with minimal system impact\n- Scheduled scanning during idle times\n- Optimized battery usage on mobile\n- Fast threat signature updates\n\n**Support & Updates**\n- Automatic security definition updates\n- Regular feature releases\n- 24/7 threat intelligence updates",
+  "faqs": [
+    {
+      "q": "Is Sentiva Shield compatible with my device?",
+      "a": "Sentiva Shield supports Windows 10+, macOS 10.14+, iOS 12+, and Android 8+."
+    }
+  ],
+  "metadata": {
+    "plan_tiers": [
+      "Basic",
+      "Plus",
+      "Premium"
+    ],
+    "supported_platforms": [
+      "Windows",
+      "macOS",
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

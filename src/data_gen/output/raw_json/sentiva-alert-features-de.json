@@ -1,0 +1,17 @@
+{
+  "doc_id": "sentiva-alert-features-de",
+  "product": "Sentiva Alert",
+  "lang": "de",
+  "category": "features",
+  "title": "Sentiva Alert - Hauptmerkmale",
+  "source_uri": "sentiva-kb://alert/features",
+  "body": "**SMS- und Nachrichtenschutz**\n- Echtzeit-SMS-Betrugs erkennung\n- URL-Analyse in Nachrichten\n- Absenderreputationsanalyse\n\n**Anruffilterung**\n- Eingehende Anrufprüfung\n- Erkennung gefälschter Anrufe\n- Sprachmusteranalyse\n\n**Deepfake-Erkennung**\n- Audio-Deepfake-Analyse\n- Video-Deepfake-Warnungen",
+  "faqs": [],
+  "metadata": {
+    "supported_platforms": [
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

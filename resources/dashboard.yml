@@ -1,0 +1,8 @@
+# AI/BI dashboard (#13) on the MLflow OTel trace tables in UC.
+resources:
+  dashboards:
+    sentiva_agent_perf:
+      display_name: "Sentiva RAG — Agent Performance"
+      file_path: ../dashboards/sentiva_agent.lvdash.json
+      warehouse_id: ${var.warehouse_id}
+      parent_path: ${workspace.file_path}

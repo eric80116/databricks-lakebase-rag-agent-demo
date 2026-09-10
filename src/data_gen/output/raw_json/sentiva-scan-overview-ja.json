@@ -1,0 +1,13 @@
+{
+  "doc_id": "sentiva-scan-overview-ja",
+  "product": "Sentiva Scan",
+  "lang": "ja",
+  "category": "overview",
+  "title": "Sentiva Scan - 無料セキュリティチェック",
+  "source_uri": "sentiva-kb://sentiva-scan/overview",
+  "body": "Sentiva Scanは、デバイスの脆弱性、古いソフトウェア、弱いパスワード、セキュリティの設定ミスを分析する無料のオンラインセキュリティ診断ツールです。登録不要、完全に無料です。",
+  "faqs": [],
+  "metadata": {
+    "last_updated": "2026-08-15"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "doc_id": "sentiva-scan-overview-fr",
+  "product": "Sentiva Scan",
+  "lang": "fr",
+  "category": "overview",
+  "title": "Sentiva Scan - Contrôle de Sécurité Gratuit",
+  "source_uri": "sentiva-kb://sentiva-scan/overview",
+  "body": "Sentiva Scan est un outil de diagnostic de sécurité en ligne gratuit qui analyse votre appareil pour détecter les vulnérabilités, les logiciels obsolètes, les mots de passe faibles et les erreurs de configuration de sécurité.",
+  "faqs": [],
+  "metadata": {
+    "last_updated": "2026-08-15"
+  }
+}

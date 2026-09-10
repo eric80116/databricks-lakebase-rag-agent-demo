@@ -1,0 +1,50 @@
+# Sentiva RAG Agent Demo — Declarative Automation Bundle (DAB)
+# Fictional brand "Sentiva". Deploy via scripts/deploy.sh (renders app.yaml/SQL + BUNDLE_VAR
+# from config.env). Direct: databricks bundle deploy -t dev --profile <your-profile>
+bundle:
+  name: sentiva-rag
+
+include:
+  - resources/*.yml
+
+variables:
+  catalog:
+    description: Unity Catalog catalog for all demo assets
+    default: dbx_agent_lakebase
+  schema:
+    description: Schema under the catalog
+    default: rag
+  volume:
+    description: UC Volume name for raw source documents (JSON + PDF)
+    default: raw_docs
+  llm_endpoint:
+    description: Chat LLM served endpoint (via AI Gateway).
+    default: databricks-gemini-3-5-flash
+  embedding_endpoint:
+    description: Embedding model served endpoint
+    default: databricks-qwen3-embedding-0-6b
+  warehouse_id:
+    description: Serverless SQL warehouse id (set in config.env -> passed as BUNDLE_VAR_warehouse_id)
+    default: ""
+  lakebase_project:
+    description: Lakebase (Postgres Autoscaling) project id — created by scripts/bootstrap.sh
+    default: sentiva-rag
+  gateway_service_id:
+    description: Unity AI Gateway model-service leaf name (lives in catalog.schema)
+    default: sentiva_llm
+  mlflow_experiment:
+    description: MLflow experiment path for agent traces (bound to a UC trace location)
+    default: /Shared/sentiva-rag-traces
+  app_a_name:
+    description: Databricks App name — agent API
+    default: sentiva-agent-api
+  app_b_name:
+    description: Databricks App name — web UI
+    default: sentiva-web
+
+targets:
+  dev:
+    # No `mode: development`: we want literal, predictable resource names.
+    # Workspace host comes from the --profile you deploy with (not hardcoded here).
+    default: true
+    # resources are defined under resources/*.yml

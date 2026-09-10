@@ -1,0 +1,17 @@
+{
+  "doc_id": "sentiva-alert-pricing-ja",
+  "product": "Sentiva Alert",
+  "lang": "ja",
+  "category": "pricing",
+  "title": "Sentiva Alert - 価格プラン",
+  "source_uri": "sentiva-kb://alert/pricing",
+  "body": "**無料プラン**\n- 基本的なSMS詐欺検出\n- 通話スクリーニング（既知の脅威に限定）\n- 通知機能付きモバイルアプリ\n- ウェブポータルアクセス\n\n**プラスプラン** - ¥1,200/月\n- 無料プランの全機能に加えて：\n- 高度な詐欺URL検出\n- ディープフェイク音声検出\n- 強化された通話分析\n- 優先サポート\n- 月間詐欺レポート\n\n**プレミアムプラン** - ¥2,500/月\n- プラスの全機能に加えて：\n- 無制限の電話番号\n- ファミリー保護（5ユーザー）\n- ダークウェブ監視\n- カスタム詐欺ルール\n- 24/7チャットサポート",
+  "faqs": [],
+  "metadata": {
+    "supported_platforms": [
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

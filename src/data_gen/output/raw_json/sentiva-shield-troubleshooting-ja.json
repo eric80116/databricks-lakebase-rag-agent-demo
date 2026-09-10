@@ -1,0 +1,24 @@
+{
+  "doc_id": "sentiva-shield-troubleshooting-ja",
+  "product": "Sentiva Shield",
+  "lang": "ja",
+  "category": "troubleshooting",
+  "title": "Sentiva Shield - トラブルシューティングガイド",
+  "source_uri": "sentiva-kb://shield/troubleshooting",
+  "body": "**一般的な問題と解決方法:**\n\nQ: インストール後、Shieldが起動しない\nA: コンピューターを再起動してください。問題が解決しない場合は、管理者権限でアンインストールして再インストールしてください。\n\nQ: 誤検知が発生する\nA: 「検疫」で検出されたファイルを確認してください。設定 > 除外に安全なファイルを追加してください。\n\nQ: CPU使用率が高い\nA: タスク中はリアルタイムスキャンを無効にしてください。\n\nQ: ライセンスキーが受け入れられない\nA: キーが正しく入力されていることを確認してください。有効期限を確認してください。",
+  "faqs": [],
+  "metadata": {
+    "plan_tiers": [
+      "Basic",
+      "Plus",
+      "Premium"
+    ],
+    "supported_platforms": [
+      "Windows",
+      "macOS",
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

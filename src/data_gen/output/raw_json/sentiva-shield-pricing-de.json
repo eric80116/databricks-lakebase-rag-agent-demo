@@ -1,0 +1,24 @@
+{
+  "doc_id": "sentiva-shield-pricing-de",
+  "product": "Sentiva Shield",
+  "lang": "de",
+  "category": "pricing",
+  "title": "Sentiva Shield - Preisgestaltung",
+  "source_uri": "sentiva-kb://shield/pricing",
+  "body": "Wählen Sie den Sentiva Shield-Plan, der Ihren Anforderungen entspricht:\n\n**Basic-Plan** - 29,99 €/Jahr (einzelnes Gerät)\n- Echtzeit-Antivirenschutz\n- Malware- und Spyware-Erkennung\n- Automatische Updates\n- E-Mail-Support\n\n**Plus-Plan** - 49,99 €/Jahr (bis zu 5 Geräte)\n- Alles im Basic enthalten, plus:\n- Fortgeschrittener Ransomware-Schutz\n- Webschutz und Phishing-Abwehr\n- VPN-Dienst (100 MB/Tag)\n- Prioritätsunterstützung\n\n**Premium-Plan** - 79,99 €/Jahr (unbegrenzte Geräte)\n- Alles im Plus enthalten, plus:\n- Unbegrenzte VPN-Nutzung\n- Passwort-Manager\n- Sichere Dateilöschung\n- Systemoptimierungstools",
+  "faqs": [],
+  "metadata": {
+    "plan_tiers": [
+      "Basic",
+      "Plus",
+      "Premium"
+    ],
+    "supported_platforms": [
+      "Windows",
+      "macOS",
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

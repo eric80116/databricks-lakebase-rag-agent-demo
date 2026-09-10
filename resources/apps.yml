@@ -1,0 +1,22 @@
+# Databricks Apps: A = agent API (FastAPI+LangChain), B = React web UI.
+# App runtime env comes from each app's app.yaml, which scripts/deploy.sh renders
+# from config.env (Databricks Apps only read env from app.yaml, not from DAB).
+# Lakebase resource paths ARE DAB-substituted from ${var.lakebase_project}.
+resources:
+  apps:
+    sentiva_agent_api:
+      name: ${var.app_a_name}
+      description: "Sentiva RAG agent API — LangChain + FastAPI, /api/chat"
+      source_code_path: ../src/app_agent
+      resources:
+        - name: lakebase
+          description: "Lakebase (kb + mem)"
+          postgres:
+            branch: projects/${var.lakebase_project}/branches/production
+            database: projects/${var.lakebase_project}/branches/production/databases/databricks-postgres
+            permission: CAN_CONNECT_AND_CREATE
+
+    sentiva_web:
+      name: ${var.app_b_name}
+      description: "Sentiva demo web UI (React) — calls the agent API"
+      source_code_path: ../src/app_ui

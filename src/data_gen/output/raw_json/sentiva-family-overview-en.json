@@ -1,0 +1,13 @@
+{
+  "doc_id": "sentiva-family-overview-en",
+  "product": "Sentiva Family",
+  "lang": "en",
+  "category": "overview",
+  "title": "Sentiva Family - AI Family Safety",
+  "source_uri": "sentiva-kb://sentiva-family/overview",
+  "body": "Sentiva Family is an AI-powered family safety assistant that helps parents protect their children online. Features include smart parental controls, real-time screen monitoring, automatic privacy masking, and kid-safe browsing recommendations. Set time limits, manage app access, filter content, and receive alerts about suspicious activities.",
+  "faqs": [],
+  "metadata": {
+    "last_updated": "2026-08-15"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "doc_id": "sentiva-shield-privacy-en",
+  "product": "Sentiva Shield",
+  "lang": "en",
+  "category": "privacy",
+  "title": "Sentiva Shield - Privacy & Data Handling",
+  "source_uri": "sentiva-kb://shield/privacy",
+  "body": "At Sentiva, we take your privacy seriously. Sentiva Shield collects minimal personal data necessary for security operations:\n\n**Data We Collect:**\n- Device identifiers (for multi-device management)\n- Threat detection logs (for improving our engine)\n- IP address and location (approximate, for geographical threat analysis)\n- Application usage patterns (anonymous, for security analysis)\n\n**Data We Do NOT Collect:**\n- Browsing history\n- Personal files or documents\n- Passwords or payment information\n- Email content\n\n**Security Measures:**\n- All data encrypted in transit (TLS 1.3)\n- Encrypted storage on our servers\n- No data sharing with third parties without explicit consent\n- Automatic deletion after 90 days\n\n**User Controls:**\n- Opt-out of analytics collection\n- Delete personal data anytime\n- Export your data in standard formats\n- Transparent privacy dashboard",
+  "faqs": [
+    {
+      "q": "Is Sentiva Shield compatible with my device?",
+      "a": "Sentiva Shield supports Windows 10+, macOS 10.14+, iOS 12+, and Android 8+."
+    }
+  ],
+  "metadata": {
+    "plan_tiers": [
+      "Basic",
+      "Plus",
+      "Premium"
+    ],
+    "supported_platforms": [
+      "Windows",
+      "macOS",
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

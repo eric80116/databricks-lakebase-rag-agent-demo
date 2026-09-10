@@ -1,0 +1,23 @@
+# Template — rendered to app.yaml by scripts/deploy.sh from config.env (envsubst).
+# ${DATABRICKS_APP_PORT:-8080} is a RUNTIME var (not rendered): Databricks Apps port.
+command: ["sh", "-c", "uvicorn app:app --host 0.0.0.0 --port ${DATABRICKS_APP_PORT:-8080}"]
+env:
+  - name: GATEWAY_SERVICE
+    value: "dbx_agent_lakebase.rag.sentiva_llm"
+  - name: EMBEDDING_ENDPOINT
+    value: "databricks-qwen3-embedding-0-6b"
+  - name: LAKEBASE_ENDPOINT
+    value: "projects/sentiva-rag/branches/production/endpoints/primary"
+  - name: K
+    value: "5"
+  # MLflow 3 GenAI tracing stored in OpenTelemetry format IN Unity Catalog.
+  - name: MLFLOW_EXPERIMENT
+    value: "/Shared/sentiva-rag-traces"
+  - name: TRACE_CATALOG
+    value: "dbx_agent_lakebase"
+  - name: TRACE_SCHEMA
+    value: "rag"
+  - name: TRACE_TABLE_PREFIX
+    value: "sentiva"
+  - name: MLFLOW_TRACING_SQL_WAREHOUSE_ID
+    value: "45f87476ae315351"

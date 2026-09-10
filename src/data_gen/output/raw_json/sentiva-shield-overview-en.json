@@ -1,0 +1,29 @@
+{
+  "doc_id": "sentiva-shield-overview-en",
+  "product": "Sentiva Shield",
+  "lang": "en",
+  "category": "overview",
+  "title": "Sentiva Shield - Advanced Multi-Device Security",
+  "source_uri": "sentiva-kb://shield/overview",
+  "body": "Sentiva Shield is a comprehensive antivirus and multi-device security suite designed to protect your digital life across Windows, macOS, iOS, and Android platforms. With real-time threat detection, advanced malware protection, and ransomware defense, Shield ensures your devices stay secure from evolving cyber threats. Our AI-powered scanning engine identifies and neutralizes threats before they can harm your system. Features include web protection that blocks malicious websites, automatic security updates, and a user-friendly dashboard for managing all your devices in one place. Sentiva Shield combines enterprise-grade security with consumer simplicity.",
+  "faqs": [
+    {
+      "q": "Is Sentiva Shield compatible with my device?",
+      "a": "Sentiva Shield supports Windows 10+, macOS 10.14+, iOS 12+, and Android 8+."
+    }
+  ],
+  "metadata": {
+    "plan_tiers": [
+      "Basic",
+      "Plus",
+      "Premium"
+    ],
+    "supported_platforms": [
+      "Windows",
+      "macOS",
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

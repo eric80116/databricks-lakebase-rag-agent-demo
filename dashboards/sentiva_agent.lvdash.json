@@ -1,0 +1,95 @@
+{
+  "datasets": [
+    {
+      "name": "traces",
+      "displayName": "Per-request trace metrics",
+      "queryLines": [
+        "SELECT trace_id, ",
+        "  min(time) AS request_time, ",
+        "  date_trunc('MINUTE', min(time)) AS request_minute, ",
+        "  max(CASE WHEN name='retrieval' THEN (end_time_unix_nano-start_time_unix_nano)/1e6 END) AS retrieval_ms, ",
+        "  max(CASE WHEN name='llm' THEN (end_time_unix_nano-start_time_unix_nano)/1e6 END) AS llm_ms, ",
+        "  max(CASE WHEN name='chat' THEN (end_time_unix_nano-start_time_unix_nano)/1e6 END) AS total_ms ",
+        "FROM dbx_agent_lakebase.rag.sentiva_otel_spans ",
+        "GROUP BY trace_id"
+      ]
+    },
+    {
+      "name": "steps",
+      "displayName": "Average latency by step",
+      "queryLines": [
+        "SELECT name AS step, ",
+        "  avg((end_time_unix_nano-start_time_unix_nano)/1e6) AS avg_ms, ",
+        "  count(*) AS n ",
+        "FROM dbx_agent_lakebase.rag.sentiva_otel_spans ",
+        "WHERE name IN ('retrieval','llm') ",
+        "GROUP BY name"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "overview",
+      "displayName": "Agent Performance",
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layout": [
+        {
+          "widget": {"name": "title", "multilineTextboxSpec": {"lines": ["## Sentiva RAG — Agent Performance"]}},
+          "position": {"x": 0, "y": 0, "width": 6, "height": 1}
+        },
+        {
+          "widget": {"name": "subtitle", "multilineTextboxSpec": {"lines": ["Per-request latency and step breakdown from MLflow OpenTelemetry traces in Unity Catalog"]}},
+          "position": {"x": 0, "y": 1, "width": 6, "height": 1}
+        },
+        {
+          "widget": {
+            "name": "kpi-requests",
+            "queries": [{"name": "main_query", "query": {"datasetName": "traces", "fields": [{"name": "count(trace_id)", "expression": "COUNT(`trace_id`)"}], "disaggregated": false}}],
+            "spec": {"version": 2, "widgetType": "counter", "encodings": {"value": {"fieldName": "count(trace_id)", "displayName": "Total requests"}}, "frame": {"showTitle": true, "title": "Total requests"}}
+          },
+          "position": {"x": 0, "y": 2, "width": 2, "height": 3}
+        },
+        {
+          "widget": {
+            "name": "kpi-total",
+            "queries": [{"name": "main_query", "query": {"datasetName": "traces", "fields": [{"name": "avg(total_ms)", "expression": "AVG(`total_ms`)"}], "disaggregated": false}}],
+            "spec": {"version": 2, "widgetType": "counter", "encodings": {"value": {"fieldName": "avg(total_ms)", "displayName": "Avg total ms"}}, "frame": {"showTitle": true, "title": "Avg total (ms)"}}
+          },
+          "position": {"x": 2, "y": 2, "width": 2, "height": 3}
+        },
+        {
+          "widget": {
+            "name": "kpi-llm",
+            "queries": [{"name": "main_query", "query": {"datasetName": "traces", "fields": [{"name": "avg(llm_ms)", "expression": "AVG(`llm_ms`)"}], "disaggregated": false}}],
+            "spec": {"version": 2, "widgetType": "counter", "encodings": {"value": {"fieldName": "avg(llm_ms)", "displayName": "Avg LLM ms"}}, "frame": {"showTitle": true, "title": "Avg LLM (ms)"}}
+          },
+          "position": {"x": 4, "y": 2, "width": 2, "height": 3}
+        },
+        {
+          "widget": {
+            "name": "latency-trend",
+            "queries": [{"name": "main_query", "query": {"datasetName": "traces", "fields": [{"name": "request_minute", "expression": "`request_minute`"}, {"name": "avg(total_ms)", "expression": "AVG(`total_ms`)"}, {"name": "avg(llm_ms)", "expression": "AVG(`llm_ms`)"}, {"name": "avg(retrieval_ms)", "expression": "AVG(`retrieval_ms`)"}], "disaggregated": false}}],
+            "spec": {"version": 3, "widgetType": "line", "encodings": {"x": {"fieldName": "request_minute", "scale": {"type": "temporal"}, "displayName": "Time"}, "y": {"scale": {"type": "quantitative"}, "fields": [{"fieldName": "avg(total_ms)", "displayName": "Total"}, {"fieldName": "avg(llm_ms)", "displayName": "LLM"}, {"fieldName": "avg(retrieval_ms)", "displayName": "Retrieval"}]}}, "frame": {"showTitle": true, "title": "Latency over time (ms)"}}
+          },
+          "position": {"x": 0, "y": 5, "width": 3, "height": 6}
+        },
+        {
+          "widget": {
+            "name": "step-breakdown",
+            "queries": [{"name": "main_query", "query": {"datasetName": "steps", "fields": [{"name": "step", "expression": "`step`"}, {"name": "avg_ms", "expression": "`avg_ms`"}], "disaggregated": true}}],
+            "spec": {"version": 3, "widgetType": "bar", "encodings": {"x": {"fieldName": "step", "scale": {"type": "categorical"}, "displayName": "Step"}, "y": {"fieldName": "avg_ms", "scale": {"type": "quantitative"}, "displayName": "Avg ms"}}, "frame": {"showTitle": true, "title": "Avg latency by step"}}
+          },
+          "position": {"x": 3, "y": 5, "width": 3, "height": 6}
+        },
+        {
+          "widget": {
+            "name": "recent-traces",
+            "queries": [{"name": "main_query", "query": {"datasetName": "traces", "fields": [{"name": "request_time", "expression": "`request_time`"}, {"name": "retrieval_ms", "expression": "`retrieval_ms`"}, {"name": "llm_ms", "expression": "`llm_ms`"}, {"name": "total_ms", "expression": "`total_ms`"}, {"name": "trace_id", "expression": "`trace_id`"}], "disaggregated": true}}],
+            "spec": {"version": 2, "widgetType": "table", "encodings": {"columns": [{"fieldName": "request_time", "displayName": "Request time"}, {"fieldName": "retrieval_ms", "displayName": "Retrieval ms"}, {"fieldName": "llm_ms", "displayName": "LLM ms"}, {"fieldName": "total_ms", "displayName": "Total ms"}, {"fieldName": "trace_id", "displayName": "Trace ID"}]}, "frame": {"showTitle": true, "title": "Recent requests"}}
+          },
+          "position": {"x": 0, "y": 11, "width": 6, "height": 6}
+        }
+      ]
+    }
+  ]
+}

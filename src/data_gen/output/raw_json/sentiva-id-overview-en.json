@@ -1,0 +1,13 @@
+{
+  "doc_id": "sentiva-id-overview-en",
+  "product": "Sentiva ID",
+  "lang": "en",
+  "category": "overview",
+  "title": "Sentiva ID - Identity & Data Protection",
+  "source_uri": "sentiva-kb://sentiva-id/overview",
+  "body": "Sentiva ID protects your personal information and digital identity. Features include VPN service, dark web monitoring, credential breach alerts, identity theft insurance, and secure password storage. Monitor your online presence, receive alerts about compromised accounts, and restore your identity if needed.",
+  "faqs": [],
+  "metadata": {
+    "last_updated": "2026-08-15"
+  }
+}

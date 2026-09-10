@@ -1,0 +1,17 @@
+{
+  "doc_id": "sentiva-alert-overview-de",
+  "product": "Sentiva Alert",
+  "lang": "de",
+  "category": "overview",
+  "title": "Sentiva Alert - Betrugserkennung",
+  "source_uri": "sentiva-kb://alert/overview",
+  "body": "Sentiva Alert ist ein intelligentes System zur Erkennung von Betrügereien und Betrug, das Sie vor SMS-Betrügereien, betrügerischen Telefonanrufen, gefälschten Websites und Deepfake-Audio/Video schützt. Mit Hilfe von maschinellem Lernen und Verhaltensanalyse erkennt Sentiva Alert verdächtige Mitteilungen in Echtzeit und warnt Sie, bevor Sie Opfer werden.",
+  "faqs": [],
+  "metadata": {
+    "supported_platforms": [
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

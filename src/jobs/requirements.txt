@@ -1,0 +1,8 @@
+# Core dependencies for Sentiva RAG ingestion pipeline
+databricks-sdk>=0.13.0
+psycopg[binary]>=3.1.0
+requests>=2.31.0
+
+# Optional: reportlab is needed for PDF generation
+# Install separately if you need to regenerate PDFs:
+# pip install reportlab

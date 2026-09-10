@@ -1,0 +1,24 @@
+{
+  "doc_id": "sentiva-shield-setup-ja",
+  "product": "Sentiva Shield",
+  "lang": "ja",
+  "category": "setup",
+  "title": "Sentiva Shield - インストールとセットアップ",
+  "source_uri": "sentiva-kb://shield/setup",
+  "body": "**Windows インストール:**\n1. sentiva.com/shieldからインストーラーをダウンロード\n2. .exeファイルを管理者として実行\n3. ライセンス契約に同意\n4. インストールフォルダを選択\n5. 「インストール」をクリックして完了を待つ\n6. プロンプトが表示されたらコンピューターを再起動\n7. スタートメニューからSentiva Shieldを起動\n8. ライセンスキーでアクティベート\n\n**macOS インストール:**\n1. .dmgインストーラーをダウンロード\n2. インストーラーを開いてアプリケーションにドラッグ\n3. Applicationsから起動\n4. 必要な権限を許可",
+  "faqs": [],
+  "metadata": {
+    "plan_tiers": [
+      "Basic",
+      "Plus",
+      "Premium"
+    ],
+    "supported_platforms": [
+      "Windows",
+      "macOS",
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

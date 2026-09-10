@@ -1,0 +1,24 @@
+{
+  "doc_id": "sentiva-shield-features-fr",
+  "product": "Sentiva Shield",
+  "lang": "fr",
+  "category": "features",
+  "title": "Sentiva Shield - Caractéristiques Clés",
+  "source_uri": "sentiva-kb://shield/features",
+  "body": "**Protection Principale**\n- Détection des menaces en temps réel alimentée par l'apprentissage automatique\n- Balayage avancé des malwares et ransomwares\n- Prévention des exploits zero-day\n- Balayage au démarrage\n\n**Sécurité Web et Réseau**\n- Bloque les sites malveillants et les tentatives de phishing\n- Alertes de navigation sécurisée\n- Protection au niveau DNS\n- Sécurité Wi-Fi public\n\n**Gestion des Appareils**\n- Tableau de bord unifié pour plusieurs appareils\n- Verrouillage à distance des appareils\n- Suivi des appareils perdus",
+  "faqs": [],
+  "metadata": {
+    "plan_tiers": [
+      "Basic",
+      "Plus",
+      "Premium"
+    ],
+    "supported_platforms": [
+      "Windows",
+      "macOS",
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

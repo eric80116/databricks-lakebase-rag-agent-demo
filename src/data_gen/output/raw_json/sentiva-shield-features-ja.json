@@ -1,0 +1,24 @@
+{
+  "doc_id": "sentiva-shield-features-ja",
+  "product": "Sentiva Shield",
+  "lang": "ja",
+  "category": "features",
+  "title": "Sentiva Shield - 主要機能",
+  "source_uri": "sentiva-kb://shield/features",
+  "body": "**コア保護**\n- 機械学習による脅威検出\n- 高度なマルウェア・ランサムウェアスキャン\n- ゼロデイエクスプロイト防止\n- ブート時スキャン\n\n**ウェブ・ネットワークセキュリティ**\n- 悪意のあるウェブサイトとフィッシング対策\n- 安全なブラウジングアラート\n- DNS保護\n- パブリックWi-Fiセキュリティ\n\n**デバイス管理**\n- 複数デバイスの統合ダッシュボード\n- リモートデバイスロック\n- 紛失デバイス追跡",
+  "faqs": [],
+  "metadata": {
+    "plan_tiers": [
+      "Basic",
+      "Plus",
+      "Premium"
+    ],
+    "supported_platforms": [
+      "Windows",
+      "macOS",
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

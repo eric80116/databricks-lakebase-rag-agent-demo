@@ -1,0 +1,77 @@
+# Sentiva RAG Data Ingestion Pipeline — serverless DAG.
+# generate -> load_json -> chunk_json ┐
+#          -> parse_pdf  -> chunk_pdf ─┴-> embed_and_load
+resources:
+  jobs:
+    sentiva_ingest:
+      name: "Sentiva RAG Ingest"
+      description: "Generate docs, load JSON, ai_parse_document + ai_prep_search chunking, embed, load Lakebase."
+      max_concurrent_runs: 1
+
+      # Serverless Python environment (deps for generate + embed tasks).
+      environments:
+        - environment_key: default
+          spec:
+            client: "3"
+            dependencies:
+              - reportlab
+              - "psycopg[binary]"
+              - databricks-sdk
+              - requests
+
+      tasks:
+        - task_key: generate_data
+          description: "Generate multilingual JSON + PDFs into the volume"
+          spark_python_task:
+            python_file: ../src/jobs/generate_data.py
+          environment_key: default
+          timeout_seconds: 900
+
+        - task_key: load_json
+          description: "Load JSON docs into bronze table docs_json"
+          depends_on: [{ task_key: generate_data }]
+          sql_task:
+            file: { path: ../src/jobs/sql/01_load_json.sql }
+            warehouse_id: ${var.warehouse_id}
+          timeout_seconds: 300
+
+        - task_key: chunk_json
+          description: "ai_prep_search over JSON body -> docs_chunks"
+          depends_on: [{ task_key: load_json }]
+          sql_task:
+            file: { path: ../src/jobs/sql/02_chunk_json.sql }
+            warehouse_id: ${var.warehouse_id}
+          timeout_seconds: 900
+
+        - task_key: parse_pdf
+          description: "ai_parse_document over PDFs -> docs_parsed"
+          depends_on: [{ task_key: generate_data }]
+          sql_task:
+            file: { path: ../src/jobs/sql/03_parse_pdf.sql }
+            warehouse_id: ${var.warehouse_id}
+          timeout_seconds: 900
+
+        - task_key: chunk_pdf
+          description: "ai_prep_search over parsed PDFs -> append docs_chunks"
+          depends_on: [{ task_key: parse_pdf }, { task_key: chunk_json }]
+          sql_task:
+            file: { path: ../src/jobs/sql/04_chunk_pdf.sql }
+            warehouse_id: ${var.warehouse_id}
+          timeout_seconds: 300
+
+        - task_key: embed_and_load
+          description: "Embed chunks (Qwen3) and UPSERT into Lakebase kb.documents + build indexes"
+          depends_on: [{ task_key: chunk_pdf }]
+          spark_python_task:
+            python_file: ../src/jobs/embed_and_load.py
+            parameters:
+              - "--catalog"
+              - "${var.catalog}"
+              - "--schema"
+              - "${var.schema}"
+              - "--embedding-endpoint"
+              - "${var.embedding_endpoint}"
+              - "--lakebase-endpoint"
+              - "projects/${var.lakebase_project}/branches/production/endpoints/primary"
+          environment_key: default
+          timeout_seconds: 1800

@@ -1,0 +1,29 @@
+{
+  "doc_id": "sentiva-shield-setup-en",
+  "product": "Sentiva Shield",
+  "lang": "en",
+  "category": "setup",
+  "title": "Sentiva Shield - Installation & Setup",
+  "source_uri": "sentiva-kb://shield/setup",
+  "body": "**Windows Installation:**\n1. Download the installer from sentiva.com/shield\n2. Run the .exe file as administrator\n3. Accept the license agreement\n4. Choose installation folder (default: C:\\Program Files\\Sentiva)\n5. Click \"Install\" and wait for completion\n6. Restart your computer when prompted\n7. Launch Sentiva Shield from Start Menu\n8. Activate with your license key or account credentials\n9. Perform first full system scan\n\n**macOS Installation:**\n1. Download the .dmg installer\n2. Open the installer and drag Sentiva Shield to Applications\n3. Navigate to Applications and double-click Sentiva Shield\n4. Grant necessary permissions when prompted\n5. Complete the setup wizard\n6. Sign in with your Sentiva account\n7. Configure real-time protection settings\n\n**Mobile Setup:**\n- iOS: Download from App Store, sign in, enable notifications\n- Android: Download from Google Play, grant permissions, activate",
+  "faqs": [
+    {
+      "q": "Is Sentiva Shield compatible with my device?",
+      "a": "Sentiva Shield supports Windows 10+, macOS 10.14+, iOS 12+, and Android 8+."
+    }
+  ],
+  "metadata": {
+    "plan_tiers": [
+      "Basic",
+      "Plus",
+      "Premium"
+    ],
+    "supported_platforms": [
+      "Windows",
+      "macOS",
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

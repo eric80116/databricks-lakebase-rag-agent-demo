@@ -1,0 +1,23 @@
+# Template — rendered to app.yaml by scripts/deploy.sh from config.env (envsubst).
+# ${DATABRICKS_APP_PORT:-8080} is a RUNTIME var (not rendered): Databricks Apps port.
+command: ["sh", "-c", "uvicorn app:app --host 0.0.0.0 --port ${DATABRICKS_APP_PORT:-8080}"]
+env:
+  - name: GATEWAY_SERVICE
+    value: "$GATEWAY_SERVICE"
+  - name: EMBEDDING_ENDPOINT
+    value: "$EMBEDDING_ENDPOINT"
+  - name: LAKEBASE_ENDPOINT
+    value: "$LAKEBASE_ENDPOINT"
+  - name: K
+    value: "$RETRIEVAL_K"
+  # MLflow 3 GenAI tracing stored in OpenTelemetry format IN Unity Catalog.
+  - name: MLFLOW_EXPERIMENT
+    value: "$MLFLOW_EXPERIMENT"
+  - name: TRACE_CATALOG
+    value: "$CATALOG"
+  - name: TRACE_SCHEMA
+    value: "$SCHEMA"
+  - name: TRACE_TABLE_PREFIX
+    value: "$TRACE_TABLE_PREFIX"
+  - name: MLFLOW_TRACING_SQL_WAREHOUSE_ID
+    value: "$WAREHOUSE_ID"

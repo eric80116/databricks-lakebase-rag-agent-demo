@@ -1,0 +1,13 @@
+{
+  "doc_id": "sentiva-id-overview-ja",
+  "product": "Sentiva ID",
+  "lang": "ja",
+  "category": "overview",
+  "title": "Sentiva ID - 個人情報・データ保護",
+  "source_uri": "sentiva-kb://sentiva-id/overview",
+  "body": "Sentiva IDはあなたの個人情報とデジタルアイデンティティを保護します。VPNサービス、ダークウェブ監視、認証情報漏洩アラート、身元盗難保険、安全なパスワード保存などの機能が含まれます。",
+  "faqs": [],
+  "metadata": {
+    "last_updated": "2026-08-15"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "doc_id": "sentiva-shield-privacy-de",
+  "product": "Sentiva Shield",
+  "lang": "de",
+  "category": "privacy",
+  "title": "Sentiva Shield - Datenschutz und Datenbehandlung",
+  "source_uri": "sentiva-kb://shield/privacy",
+  "body": "Bei Sentiva nehmen wir Ihren Datenschutz ernst. Sentiva Shield erfasst nur minimale persönliche Daten, die für Sicherheitsvorgänge erforderlich sind:\n\n**Von uns erfasste Daten:**\n- Gerätebezeichner\n- Bedrohungserkennungsprotokolle\n- IP-Adresse und ungefähre Standorte\n- Nutzungsmuster für Anwendungen (anonym)\n\n**Von uns NICHT erfasste Daten:**\n- Browsing-Verlauf\n- Persönliche Dateien oder Dokumente\n- Passwörter oder Zahlungsinformationen\n- E-Mail-Inhalte\n\n**Sicherheitsmaßnahmen:**\n- Alle Daten während der Übertragung verschlüsselt (TLS 1.3)\n- Verschlüsserte Speicherung auf unseren Servern\n- Keine Datenweitergabe an Dritte ohne ausdrückliche Zustimmung\n- Automatisches Löschen nach 90 Tagen",
+  "faqs": [],
+  "metadata": {
+    "plan_tiers": [
+      "Basic",
+      "Plus",
+      "Premium"
+    ],
+    "supported_platforms": [
+      "Windows",
+      "macOS",
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

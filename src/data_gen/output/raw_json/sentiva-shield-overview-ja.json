@@ -1,0 +1,24 @@
+{
+  "doc_id": "sentiva-shield-overview-ja",
+  "product": "Sentiva Shield",
+  "lang": "ja",
+  "category": "overview",
+  "title": "Sentiva Shield - 高度なマルチデバイスセキュリティ",
+  "source_uri": "sentiva-kb://shield/overview",
+  "body": "Sentiva Shieldは、Windows、macOS、iOS、Androidプラットフォーム全体でデジタル生活を保護するための包括的なアンチウイルスおよびマルチデバイスセキュリティスイートです。リアルタイム脅威検出、高度なマルウェア保護、ランサムウェア防御により、デバイスを進化するサイバー脅威から安全に保ちます。当社のAI搭載スキャンエンジンは、脅威がシステムに害を与える前に識別して中和します。機能には、悪意のあるウェブサイトをブロックするウェブ保護、自動セキュリティ更新、およびすべてのデバイスを1か所で管理するユーザーフレンドリーなダッシュボードが含まれます。",
+  "faqs": [],
+  "metadata": {
+    "plan_tiers": [
+      "Basic",
+      "Plus",
+      "Premium"
+    ],
+    "supported_platforms": [
+      "Windows",
+      "macOS",
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

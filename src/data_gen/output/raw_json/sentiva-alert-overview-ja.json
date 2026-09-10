@@ -1,0 +1,17 @@
+{
+  "doc_id": "sentiva-alert-overview-ja",
+  "product": "Sentiva Alert",
+  "lang": "ja",
+  "category": "overview",
+  "title": "Sentiva Alert - 詐欺検出システム",
+  "source_uri": "sentiva-kb://alert/overview",
+  "body": "Sentiva Alertは、テキストメッセージ詐欺、詐欺電話、偽のウェブサイト、およびディープフェイク音声/ビデオから保護するインテリジェント詐欺検出システムです。機械学習と行動分析を使用して、Sentiva Alertは疑わしい通信をリアルタイムで識別し、被害者になる前に警告します。このサービスはあなたの電話と統合して、着信通話とメッセージを分析し、詐欺的なサイトの常に更新されるデータベースに対してURLをチェックし、音声分析を使用してなりすまし通話を検出します。",
+  "faqs": [],
+  "metadata": {
+    "supported_platforms": [
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

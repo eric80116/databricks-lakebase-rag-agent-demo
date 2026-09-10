@@ -1,0 +1,17 @@
+{
+  "doc_id": "sentiva-alert-pricing-fr",
+  "product": "Sentiva Alert",
+  "lang": "fr",
+  "category": "pricing",
+  "title": "Sentiva Alert - Plans de Tarification",
+  "source_uri": "sentiva-kb://alert/pricing",
+  "body": "**Plan Gratuit**\n- Détection basique des fraudes par SMS\n- Filtrage des appels (limité aux menaces connues)\n- Application mobile avec notifications\n- Accès au portail Web\n\n**Plan Plus** - 9,99 €/mois\n- Tout ce qui se trouve dans Gratuit, plus :\n- Détection avancée des URL frauduleuses\n- Détection des deepfakes audio\n- Analyse d'appels améliorée\n- Support prioritaire\n- Rapport mensuel sur les fraudes\n\n**Plan Premium** - 19,99 €/mois\n- Tout ce qui se trouve dans Plus, plus :\n- Numéros de téléphone illimités\n- Protection familiale (5 utilisateurs)\n- Surveillance du dark web\n- Règles de fraude personnalisées\n- Support chat en temps réel",
+  "faqs": [],
+  "metadata": {
+    "supported_platforms": [
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

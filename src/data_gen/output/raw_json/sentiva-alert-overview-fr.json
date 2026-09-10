@@ -1,0 +1,17 @@
+{
+  "doc_id": "sentiva-alert-overview-fr",
+  "product": "Sentiva Alert",
+  "lang": "fr",
+  "category": "overview",
+  "title": "Sentiva Alert - Détection des Fraudes",
+  "source_uri": "sentiva-kb://alert/overview",
+  "body": "Sentiva Alert est un système intelligent de détection des fraudes et arnaques qui vous protège contre les SMS frauduleux, les appels téléphoniques frauduleux, les faux sites Web et les audio/vidéos deepfake. En utilisant l'apprentissage automatique et l'analyse comportementale, Sentiva Alert identifie les communications suspectes en temps réel et vous alerte avant que vous ne deveniez une victime. Le service s'intègre à votre téléphone pour analyser les appels et les messages entrants, vérifie les URL par rapport à une base de données constamment mise à jour de sites frauduleux.",
+  "faqs": [],
+  "metadata": {
+    "supported_platforms": [
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

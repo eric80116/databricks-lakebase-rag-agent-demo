@@ -1,0 +1,37 @@
+# --- environment-specific / secrets (never commit) ---
+# real per-env values (profile, warehouse id, S3 storage root) — use config.env.example
+config.env
+.databrickscfg
+
+# --- internal working notes (contain env IDs / customer context) ---
+PROGRESS.md
+docs/PLAN.md
+
+# --- local tooling / IDE ---
+.claude/
+.databricks/
+.vscode/
+.idea/
+.DS_Store
+
+# --- python ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# --- node / react ---
+node_modules/
+# App B is built at deploy time (npm run build); don't commit build output or TS artifacts
+src/app_ui/frontend/dist/
+src/app_ui/frontend/src/**/*.js
+src/app_ui/frontend/src/**/*.d.ts
+src/app_ui/frontend/src/**/*.d.ts.map
+src/app_ui/frontend/vite.config.js
+src/app_ui/frontend/vite.config.d.ts
+*.tsbuildinfo
+
+# --- misc ---
+*.bak

@@ -1,0 +1,15 @@
+# UC schema + volume for the demo.
+# NOTE: the catalog itself is created by scripts/bootstrap.sh (DAB does not manage catalogs).
+resources:
+  schemas:
+    rag:
+      catalog_name: ${var.catalog}
+      name: ${var.schema}
+      comment: "Sentiva RAG demo — docs, chunks, parsed PDFs, and MLflow trace views"
+
+  volumes:
+    raw_docs:
+      catalog_name: ${var.catalog}
+      schema_name: ${resources.schemas.rag.name}
+      name: ${var.volume}
+      comment: "Raw source documents: multilingual product JSON (raw_json/) and PDFs (raw_pdf/)"

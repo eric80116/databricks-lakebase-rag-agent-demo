@@ -1,0 +1,24 @@
+{
+  "doc_id": "sentiva-shield-pricing-fr",
+  "product": "Sentiva Shield",
+  "lang": "fr",
+  "category": "pricing",
+  "title": "Sentiva Shield - Plans de Tarification",
+  "source_uri": "sentiva-kb://shield/pricing",
+  "body": "Choisissez le plan Sentiva Shield qui correspond à vos besoins :\n\n**Plan Basic** - 29,99 €/an (appareil unique)\n- Protection antivirus en temps réel\n- Détection des malwares et spywares\n- Mises à jour automatiques\n- Support par e-mail\n\n**Plan Plus** - 49,99 €/an (jusqu'à 5 appareils)\n- Tout ce qui se trouve dans Basic, plus :\n- Protection avancée contre les ransomwares\n- Protection Web et défense contre le phishing\n- Service VPN (100 Mo/jour)\n- Support prioritaire\n\n**Plan Premium** - 79,99 €/an (appareils illimités)\n- Tout ce qui se trouve dans Plus, plus :\n- Utilisation VPN illimitée\n- Gestionnaire de mots de passe\n- Suppression de fichiers sécurisée\n- Outils d'optimisation système",
+  "faqs": [],
+  "metadata": {
+    "plan_tiers": [
+      "Basic",
+      "Plus",
+      "Premium"
+    ],
+    "supported_platforms": [
+      "Windows",
+      "macOS",
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

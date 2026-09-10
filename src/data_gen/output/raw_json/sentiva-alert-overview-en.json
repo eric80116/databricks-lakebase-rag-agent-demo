@@ -1,0 +1,17 @@
+{
+  "doc_id": "sentiva-alert-overview-en",
+  "product": "Sentiva Alert",
+  "lang": "en",
+  "category": "overview",
+  "title": "Sentiva Alert - Scam & Fraud Detection",
+  "source_uri": "sentiva-kb://alert/overview",
+  "body": "Sentiva Alert is an intelligent scam and fraud detection system that protects you from text message scams, fraudulent phone calls, fake websites, and deepfake audio/video. Using machine learning and behavioral analysis, Sentiva Alert identifies suspicious communications in real-time and alerts you before you become a victim. The service integrates with your phone to analyze incoming calls and messages, checks URLs against a constantly updated database of fraudulent sites, and uses voice analysis to detect spoofed calls. Available on iOS and Android, Sentiva Alert provides peace of mind in an increasingly dangerous digital landscape.",
+  "faqs": [],
+  "metadata": {
+    "supported_platforms": [
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

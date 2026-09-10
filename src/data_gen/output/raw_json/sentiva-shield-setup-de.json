@@ -1,0 +1,24 @@
+{
+  "doc_id": "sentiva-shield-setup-de",
+  "product": "Sentiva Shield",
+  "lang": "de",
+  "category": "setup",
+  "title": "Sentiva Shield - Installation und Einrichtung",
+  "source_uri": "sentiva-kb://shield/setup",
+  "body": "**Windows-Installation:**\n1. Laden Sie das Installationsprogramm von sentiva.com/shield herunter\n2. Führen Sie die .exe-Datei als Administrator aus\n3. Akzeptieren Sie die Lizenzvereinbarung\n4. Wählen Sie den Installationsordner\n5. Klicken Sie auf „Installieren\" und warten Sie auf die Fertigstellung\n6. Starten Sie Ihren Computer neu, wenn Sie dazu aufgefordert werden\n7. Starten Sie Sentiva Shield aus dem Startmenü\n8. Aktivieren Sie mit Ihrem Lizenzschlüssel\n\n**macOS-Installation:**\n1. Laden Sie das .dmg-Installationsprogramm herunter\n2. Öffnen Sie das Installationsprogramm und ziehen Sie es in Anwendungen\n3. Starten Sie von Anwendungen\n4. Erteilen Sie die erforderlichen Berechtigungen",
+  "faqs": [],
+  "metadata": {
+    "plan_tiers": [
+      "Basic",
+      "Plus",
+      "Premium"
+    ],
+    "supported_platforms": [
+      "Windows",
+      "macOS",
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

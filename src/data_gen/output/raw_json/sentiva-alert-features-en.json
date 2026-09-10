@@ -1,0 +1,17 @@
+{
+  "doc_id": "sentiva-alert-features-en",
+  "product": "Sentiva Alert",
+  "lang": "en",
+  "category": "features",
+  "title": "Sentiva Alert - Key Features",
+  "source_uri": "sentiva-kb://alert/features",
+  "body": "**SMS & Message Protection**\n- Real-time text message scam detection\n- URL scanning in messages\n- Sender reputation analysis\n- Suspicious pattern recognition\n\n**Call Screening**\n- Incoming call verification\n- Spoofed call detection\n- Voice pattern analysis\n- Known scammer database\n\n**Deepfake Detection**\n- Audio deepfake analysis\n- Video deepfake alerts\n- Biometric spoofing detection\n\n**Web Protection**\n- Phishing website detection\n- Fake banking site identification\n- Online auction fraud protection\n- E-commerce scam detection\n\n**User Dashboard**\n- View blocked threats\n- Manage whitelist/blacklist\n- Set custom detection rules\n- Export threat reports",
+  "faqs": [],
+  "metadata": {
+    "supported_platforms": [
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}

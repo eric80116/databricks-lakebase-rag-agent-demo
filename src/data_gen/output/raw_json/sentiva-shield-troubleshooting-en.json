@@ -1,0 +1,29 @@
+{
+  "doc_id": "sentiva-shield-troubleshooting-en",
+  "product": "Sentiva Shield",
+  "lang": "en",
+  "category": "troubleshooting",
+  "title": "Sentiva Shield - Troubleshooting Guide",
+  "source_uri": "sentiva-kb://shield/troubleshooting",
+  "body": "**Common Issues & Solutions:**\n\nQ: Shield won't start after installation\nA: Restart your computer. If problem persists, uninstall and reinstall, ensuring admin rights.\n\nQ: False positive detections\nA: Review detected files in Quarantine. Add safe files to exclusions via Settings > Exclusions. Report false positives to support@sentiva.com.\n\nQ: High CPU usage\nA: Disable real-time scanning during tasks. Configure scheduled scans during idle hours in Settings > Scan Schedule.\n\nQ: License key not accepted\nA: Ensure key is entered correctly. Check if license has expired. Download fresh key from your account.\n\nQ: Mobile app crashes\nA: Clear app cache via Settings > Apps. Reinstall from store.\n\nQ: VPN connection fails\nA: Restart VPN service. Select different server location. Check internet connection.",
+  "faqs": [
+    {
+      "q": "Is Sentiva Shield compatible with my device?",
+      "a": "Sentiva Shield supports Windows 10+, macOS 10.14+, iOS 12+, and Android 8+."
+    }
+  ],
+  "metadata": {
+    "plan_tiers": [
+      "Basic",
+      "Plus",
+      "Premium"
+    ],
+    "supported_platforms": [
+      "Windows",
+      "macOS",
+      "iOS",
+      "Android"
+    ],
+    "last_updated": "2026-08-15"
+  }
+}
