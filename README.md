@@ -77,7 +77,7 @@ src/app_ui/               App B — React UI + FastAPI proxy
 src/jobs/ + src/data_gen/ ingestion pipeline + synthetic multilingual doc generators
 dashboards/               AI/BI dashboard definition
 tests/                    pytest end-to-end suite (13 checks)
-docs/                     DEPLOYMENT.md · DEMO.md · UI_REQUIRED_STEPS.md
+docs/                     DEPLOYMENT.md · DEMO.md
 ```
 
 ## Deploy / run / test
