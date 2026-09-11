@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 
 import httpx
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 # Configuration
@@ -213,6 +213,68 @@ async def chat(request: Request):
             {"detail": f"Internal server error: {str(e)}"},
             status_code=500,
         )
+
+
+def _agent_headers(request: Request):
+    headers = {"Content-Type": "application/json"}
+    user_token = request.headers.get("x-forwarded-access-token")
+    if user_token:
+        headers["Authorization"] = f"Bearer {user_token}"
+    else:
+        try:
+            from databricks.sdk.core import Config
+            headers.update(Config().authenticate())
+        except Exception as e:
+            print(f"Warning: Could not get Databricks token: {e}")
+    return headers
+
+
+@app.post("/api/chat/stream")
+async def chat_stream(request: Request):
+    """Proxy the agent's Server-Sent Events stream through to the browser."""
+    try:
+        body = await request.json()
+    except Exception as e:
+        return JSONResponse({"detail": f"Invalid request body: {str(e)}"}, status_code=400)
+    session_id, message = body.get("session_id"), body.get("message")
+    if not session_id or not message:
+        return JSONResponse({"detail": "Missing required fields: session_id, message"}, status_code=400)
+
+    if USE_MOCK or not AGENT_API_URL:
+        # Mock/misconfig: emit the non-streaming mock as a single SSE 'done' so the UI still works.
+        mock = get_mock_response()
+        payload = mock.body.decode() if hasattr(mock, "body") else json.dumps({"answer": "", "sources": [], "timings": {}})
+        async def mockgen():
+            import json as _j
+            d = _j.loads(payload) if isinstance(payload, str) else payload
+            yield f"data: {_j.dumps({'type':'token','text': d.get('answer','')})}\n\n"
+            yield f"data: {_j.dumps({'type':'done','sources': d.get('sources',[]),'timings': d.get('timings',{}),'trace_id': d.get('trace_id','')})}\n\n"
+        return StreamingResponse(mockgen(), media_type="text/event-stream")
+
+    headers = _agent_headers(request)
+
+    async def gen():
+        try:
+            async with http_client.stream(
+                "POST", f"{AGENT_API_URL}/api/chat/stream",
+                json={"session_id": session_id, "message": message}, headers=headers,
+            ) as resp:
+                if resp.status_code != 200:
+                    text = (await resp.aread()).decode(errors="replace")
+                    yield f"data: {json.dumps({'type':'error','error': f'Agent API {resp.status_code}: {text[:200]}'})}\n\n"
+                    return
+                async for line in resp.aiter_lines():
+                    if line:
+                        yield line + "\n"
+                    else:
+                        yield "\n"  # preserve SSE event boundaries
+        except httpx.TimeoutException:
+            yield f"data: {json.dumps({'type':'error','error':'Request to agent API timed out'})}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type':'error','error': str(e)})}\n\n"
+
+    return StreamingResponse(gen(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
 # Serve static files

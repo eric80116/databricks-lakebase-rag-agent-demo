@@ -1,13 +1,15 @@
-"""Sentiva RAG agent API (App A) — FastAPI + LangChain, deployed as a Databricks App.
+"""Sentiva RAG agent API (App A) — FastAPI, deployed as a Databricks App.
 
 Endpoints:
-  GET  /api/health -> {"status":"ok"}
-  POST /api/chat   -> {answer, sources[], timings{}, trace_id}
+  GET  /api/health      -> {"status":"ok"}
+  POST /api/chat        -> {answer, sources[], timings{}, trace_id}
+  POST /api/chat/stream -> Server-Sent Events: {type:token,text} ... {type:done,sources,timings,trace_id}
 """
 import os
+import json as _json
 import logging
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 
 from models import ChatRequest, ChatResponse, Timings
 
@@ -95,3 +97,20 @@ def chat(req: ChatRequest):
         timings=Timings(**timings),
         trace_id=trace_id or "",
     )
+
+
+@app.post("/api/chat/stream")
+def chat_stream(req: ChatRequest):
+    """Stream the answer token-by-token as Server-Sent Events (first token in ~1-2s)."""
+    import agent
+
+    def gen():
+        try:
+            for ev in agent.stream_answer(req.session_id, req.message):
+                yield f"data: {_json.dumps(ev)}\n\n"
+        except Exception as e:  # surface as a final SSE error event
+            log.exception("chat stream failed")
+            yield f"data: {_json.dumps({'type': 'error', 'error': str(e)})}\n\n"
+
+    return StreamingResponse(gen(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})

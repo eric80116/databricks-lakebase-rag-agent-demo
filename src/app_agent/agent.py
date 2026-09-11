@@ -24,6 +24,7 @@ from mlflow.pyfunc import ResponsesAgent
 from mlflow.types.responses import ResponsesAgentRequest, ResponsesAgentResponse
 from langchain_core.tools import tool
 from langchain_core.runnables import RunnableConfig
+from langchain_core.messages import AIMessageChunk
 from langgraph.prebuilt import create_react_agent
 
 import retriever
@@ -40,6 +41,17 @@ SYSTEM_PROMPT = (
 )
 
 _ROLE_MAP = {"human": "user", "user": "user", "ai": "assistant", "assistant": "assistant"}
+
+
+def _span(name):
+    """mlflow span context manager, or a no-op if mlflow is unavailable."""
+    if mlflow is not None:
+        try:
+            return mlflow.start_span(name=name)
+        except Exception:
+            pass
+    from contextlib import nullcontext
+    return nullcontext()
 
 # Per-request capture. LangGraph runs the tool on a different thread, so neither
 # ContextVar nor threading.local reaches back. Instead we pass a request id through the
@@ -221,3 +233,85 @@ def answer(session_id: str, message: str):
     resp = AGENT.predict(req)
     co = resp.custom_outputs or {}
     return _output_text(resp), co.get("sources", []), co.get("timings", {})
+
+
+def _chunk_text(chunk) -> str:
+    if isinstance(chunk, AIMessageChunk):
+        c = chunk.content
+        if isinstance(c, str):
+            return c
+        if isinstance(c, list):
+            return "".join(p.get("text", "") for p in c if isinstance(p, dict))
+    return ""
+
+
+def stream_answer(session_id: str, message: str):
+    """Generator for streaming: yields {'type':'token','text':...} as the agent produces
+    the answer, then a final {'type':'done','sources':[...],'timings':{...},'trace_id':...}.
+
+    Only the answer-generation tokens carry text content (the tool-decision step does not),
+    so filtering on non-empty text yields exactly the visible answer stream."""
+    rid = uuid.uuid4().hex
+    with _REG_LOCK:
+        _REGISTRY[rid] = {"sources": [], "retr_ms": 0.0}
+    t0 = time.perf_counter()
+    history = memory.load_history(session_id)
+    msgs = [
+        {"role": _ROLE_MAP.get(h.get("role"), "user"), "content": (h.get("content") or "").strip()}
+        for h in history
+        if (h.get("content") or "").strip()
+    ]
+    msgs.append({"role": "user", "content": message})
+
+    parts = []
+    trace_id = ""
+    try:
+        # NB: no manual span context manager around this loop — a span's ContextVar token
+        # can't be reset across generator yields ("Token created in a different Context").
+        # autolog traces the graph.stream run; we read the trace id afterwards.
+        for chunk, _meta in _graph().stream(
+            {"messages": msgs},
+            config={"configurable": {_REQ_ID_KEY: rid}},
+            stream_mode="messages",
+        ):
+            txt = _chunk_text(chunk)
+            if txt:
+                parts.append(txt)
+                yield {"type": "token", "text": txt}
+
+        answer_text = "".join(parts)
+        total_ms = (time.perf_counter() - t0) * 1000
+        with _REG_LOCK:
+            entry = _REGISTRY.get(rid, {})
+        retr_ms = entry.get("retr_ms", 0.0)
+        sources = entry.get("sources", [])
+        try:
+            memory.save_message(session_id, "human", message)
+            memory.save_message(session_id, "ai", answer_text)
+        except Exception:
+            pass
+        if not trace_id and mlflow is not None:
+            try:
+                trace_id = mlflow.get_last_active_trace_id() or ""
+            except Exception:
+                trace_id = ""
+        timings = {
+            "retrieval_ms": round(retr_ms, 1),
+            "llm_ms": round(max(total_ms - retr_ms, 0.0), 1),
+            "total_ms": round(total_ms, 1),
+        }
+        if mlflow is not None:
+            try:
+                mlflow.update_current_trace(tags={
+                    "retrieval_ms": str(timings["retrieval_ms"]),
+                    "llm_ms": str(timings["llm_ms"]),
+                    "total_ms": str(timings["total_ms"]),
+                    "n_sources": str(len(sources)),
+                    "streamed": "true",
+                })
+            except Exception:
+                pass
+        yield {"type": "done", "sources": sources, "timings": timings, "trace_id": trace_id or ""}
+    finally:
+        with _REG_LOCK:
+            _REGISTRY.pop(rid, None)

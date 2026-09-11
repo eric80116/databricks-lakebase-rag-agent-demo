@@ -97,48 +97,81 @@ const Chat: React.FC = () => {
         role: 'user',
         content: text,
       }
+      const assistantId = uuidv4()
 
-      setMessages((prev) => [...prev, userMessage])
+      // add the user turn + an empty assistant bubble that fills in as tokens stream
+      setMessages((prev) => [
+        ...prev,
+        userMessage,
+        { id: assistantId, role: 'assistant', content: '' },
+      ])
       setInput('')
       setLoading(true)
       setError(null)
       setShowSuggestions(false)
 
+      const patch = (id: string, fn: (m: Message) => Message) =>
+        setMessages((prev) => prev.map((m) => (m.id === id ? fn(m) : m)))
+
       try {
-        const response = await fetch('/api/chat', {
+        const response = await fetch('/api/chat/stream', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            session_id: sessionId,
-            message: text,
-          }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sessionId, message: text }),
         })
 
-        if (!response.ok) {
+        if (!response.ok || !response.body) {
           const errorData = await response.json().catch(() => ({}))
           throw new Error(
             errorData.detail || `API error: ${response.statusText}`
           )
         }
 
-        const data = await response.json()
+        const reader = response.body.getReader()
+        const decoder = new TextDecoder()
+        let buffer = ''
+        let streamError: string | null = null
 
-        const assistantMessage: Message = {
-          id: uuidv4(),
-          role: 'assistant',
-          content: data.answer,
-          sources: data.sources,
-          timings: data.timings,
-          trace_id: data.trace_id,
+        // parse Server-Sent Events: newline-delimited `data: {json}` lines
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() ?? ''
+          for (const line of lines) {
+            const s = line.trim()
+            if (!s.startsWith('data:')) continue
+            let ev: any
+            try {
+              ev = JSON.parse(s.slice(5).trim())
+            } catch {
+              continue
+            }
+            if (ev.type === 'token') {
+              setLoading(false) // first tokens arrived — drop the typing indicator
+              patch(assistantId, (m) => ({ ...m, content: m.content + ev.text }))
+            } else if (ev.type === 'done') {
+              patch(assistantId, (m) => ({
+                ...m,
+                sources: ev.sources,
+                timings: ev.timings,
+                trace_id: ev.trace_id,
+              }))
+            } else if (ev.type === 'error') {
+              streamError = ev.error
+            }
+          }
         }
-
-        setMessages((prev) => [...prev, assistantMessage])
+        if (streamError) throw new Error(streamError)
       } catch (err) {
         const errorMsg =
           err instanceof Error ? err.message : 'Failed to send message'
         setError(errorMsg)
+        // drop the empty assistant placeholder if nothing streamed
+        setMessages((prev) =>
+          prev.filter((m) => !(m.id === assistantId && !m.content))
+        )
         console.error('Chat error:', err)
       } finally {
         setLoading(false)
