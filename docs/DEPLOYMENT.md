@@ -29,7 +29,7 @@ cleanly. **To target a different workspace, you only edit `config.env`.**
 ### ⚠️ Two toggles you MUST enable in the UI (not available via CLI)
 These are manual checkpoints during deployment; `scripts/preflight.sh` verifies whether they are on:
 1. **Lakebase Search**: Lakebase → your project → Settings → **Enable Lakebase Search** (irreversible; restarts the project compute). → enable after `bootstrap.sh` (STAGE 1) and before `bootstrap_search.sh` (STAGE 2).
-2. **AI Prep Search preview**: Workspace → Settings → **Previews** → enable **AI Prep Search** (`ai_parse_document` does not need it; `ai_prep_search` does). → enable before running the ingest job.
+2. **AI Prep Search preview**: Workspace → Settings → **Previews** → enable **AI Prep Search** (`ai_parse_document` does not need it; `ai_prep_search` does). → enable after `bootstrap.sh` (STAGE 1), before `deploy.sh` — the ingest job needs it and `deploy.sh`'s preflight verifies it. (Workspace-level, so you can enable it any time before STAGE 4.)
 
 ---
 
@@ -45,7 +45,7 @@ source config.env
 # STAGE 1 — catalog + Lakebase project
 ./scripts/bootstrap.sh
 ```
-**[Manual UI checkpoint ① — see §1]** Enable **Lakebase Search** on the project now (required before STAGE 2).
+**[Manual UI checkpoints — see §1]** Enable BOTH toggles now (the later stages and `deploy.sh`'s preflight verify them): **①** Lakebase Search on the project, and **②** the AI Prep Search workspace preview.
 
 ```bash
 # STAGE 2 — Lakebase Search extensions + kb/mem schemas & tables
@@ -57,14 +57,12 @@ source config.env
 # STAGE 4 — render config, deploy the DAB (schema / volume / job / apps / dashboard),
 #           create the Unity AI Gateway model-service, grant the SP, deploy + start apps
 ./scripts/deploy.sh
-```
-**[Manual UI checkpoint ② — see §1]** Enable the **AI Prep Search** preview now (required before STAGE 5).
-```bash
+
 # STAGE 5 — run the ingestion pipeline (generate → load → chunk → embed → Lakebase + indexes)
 databricks bundle run sentiva_ingest -t dev --profile "$PROFILE"
 ```
 
-> `create_gateway.sh` is run automatically inside `deploy.sh` (after the UC schema exists). You can also run it standalone, but only after the schema has been created.
+> `create_gateway.sh` runs automatically inside `deploy.sh` (after the UC schema exists). You can also run it standalone, but only after the schema has been created.
 
 > **Important details (already handled by the scripts/config — listed for understanding)**
 > - Databricks Apps must listen on **`$DATABRICKS_APP_PORT`** (8000 in some workspaces, not 8080) — app.yaml uses `uvicorn ... --port ${DATABRICKS_APP_PORT:-8080}`.
