@@ -59,7 +59,7 @@ source config.env
 ./scripts/deploy.sh
 
 # STAGE 5 — run the ingestion pipeline (generate → load → chunk → embed → Lakebase + indexes)
-databricks bundle run sentiva_ingest -t dev --profile "$PROFILE"
+./scripts/run_ingest.sh
 ```
 
 > **Important details (already handled by the scripts/config — listed for understanding)**

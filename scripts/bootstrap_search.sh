@@ -50,5 +50,5 @@ fi
 echo "==> STAGE 2 complete. Next steps (see docs/DEPLOYMENT.md §2):"
 echo "    STAGE 3: cd src/app_ui/frontend && npm install && npm run build"
 echo "    STAGE 4: scripts/deploy.sh   (also creates the AI Gateway model-service + grants)"
-echo "    STAGE 5: databricks bundle run sentiva_ingest -t dev --profile $PROFILE"
+echo "    STAGE 5: scripts/run_ingest.sh"
 echo "    (ensure the AI Prep Search preview is enabled before STAGE 4 — deploy.sh's preflight checks it)"
