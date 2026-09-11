@@ -24,12 +24,17 @@ fail(){ printf "  \033[31m✗\033[0m %s\n" "$1"; FAILS=$((FAILS+1)); }
 
 echo "== apps (billable compute) =="
 for A in "$APP_A" "$APP_B"; do
-  ST=$(databricks apps get "$A" --profile "$PROFILE" -o json 2>/dev/null | python3 -c "import json,sys
-try: print(json.load(sys.stdin).get('compute_status',{}).get('state','') or 'PRESENT')
-except: print('GONE')" 2>/dev/null || echo GONE)
-  if [ "$ST" = "GONE" ] || [ -z "$ST" ]; then pass "app removed: $A"
-  elif echo "$ST" | grep -qiE 'DELETING|STOPPED'; then warn "app '$A' is $ST (being removed) — re-check shortly"
-  else fail "app still active: $A ($ST)"; fi
+  # Existence is decided by whether `apps get` returns app JSON (has "name") or an
+  # error ("... does not exist"). Parsing state directly mis-fires on the error text.
+  OUT=$(databricks apps get "$A" --profile "$PROFILE" -o json 2>&1)
+  if ! printf '%s' "$OUT" | grep -q '"name"'; then pass "app removed: $A"
+  else
+    ST=$(printf '%s' "$OUT" | python3 -c "import json,sys
+try: print(json.load(sys.stdin).get('compute_status',{}).get('state','') or '')
+except: print('')" 2>/dev/null)
+    if printf '%s' "$ST" | grep -qiE 'DELETING|STOPPED'; then warn "app '$A' is $ST (being removed) — re-check shortly"
+    else fail "app still active: $A ($ST)"; fi
+  fi
 done
 
 echo "== job =="

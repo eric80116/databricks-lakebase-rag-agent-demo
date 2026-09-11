@@ -87,9 +87,9 @@ BUNDLE_VAR_warehouse_id="$WAREHOUSE_ID" databricks bundle run sentiva_ingest -t 
 
 ## 4. Teardown (avoid surprise cost)
 ```bash
-./scripts/teardown.sh                          # reads config.env; keeps the catalog
-./scripts/teardown.sh "" "" "" --drop-catalog  # also drop the catalog
-./scripts/verify_teardown.sh                   # confirm all (billable) resources are gone
+./scripts/teardown.sh                 # reads config.env; keeps the catalog
+./scripts/teardown.sh --drop-catalog  # also drop the catalog
+./scripts/verify_teardown.sh          # confirm all (billable) resources are gone
 ```
 teardown does: `bundle destroy` (schema/volume/jobs/apps/dashboard) → delete the AI Gateway model-service → drop the inference table → delete the Lakebase project → clear `LAKEBASE_PROJECT_ACTUAL` from config.env → (optionally) drop the catalog.
 

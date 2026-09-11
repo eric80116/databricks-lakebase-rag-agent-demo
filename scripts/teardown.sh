@@ -4,17 +4,26 @@
 # Removes: DAB-managed resources, the Lakebase project, the AI Gateway endpoint,
 # and (optionally) the catalog.
 #
-# Usage: scripts/teardown.sh [PROFILE] [CATALOG] [LAKEBASE_PROJECT] [--drop-catalog]
+# Usage: scripts/teardown.sh [--drop-catalog] [PROFILE] [CATALOG] [LAKEBASE_PROJECT]
+#   --drop-catalog : also drop the catalog (position-independent flag; default keeps it)
+#   positional PROFILE/CATALOG/LAKEBASE_PROJECT override config.env (rarely needed)
 # ==============================================================================
 set -uo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 [ -f "$HERE/../config.env" ] && source "$HERE/../config.env"
 
-PROFILE="${1:-${PROFILE:-DEFAULT}}"
-CATALOG="${2:-${CATALOG:-dbx_agent_lakebase}}"
-PROJECT="${3:-${LAKEBASE_PROJECT_ACTUAL:-${LAKEBASE_PROJECT:-sentiva-rag}}}"
-DROP_CATALOG="${4:-}"
+# Parse args: --drop-catalog can appear anywhere; other args are positional overrides.
+DROP_CATALOG=""; POSN=()
+for arg in "$@"; do
+  case "$arg" in
+    --drop-catalog) DROP_CATALOG="--drop-catalog" ;;
+    *) POSN+=("$arg") ;;
+  esac
+done
+PROFILE="${POSN[0]:-${PROFILE:-DEFAULT}}"
+CATALOG="${POSN[1]:-${CATALOG:-dbx_agent_lakebase}}"
+PROJECT="${POSN[2]:-${LAKEBASE_PROJECT_ACTUAL:-${LAKEBASE_PROJECT:-sentiva-rag}}}"
 CONFIG_FILE="$HERE/../config.env"
 SCHEMA="${SCHEMA:-rag}"
 GATEWAY_SERVICE_ID="${GATEWAY_SERVICE_ID:-sentiva_llm}"
