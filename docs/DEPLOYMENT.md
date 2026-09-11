@@ -64,7 +64,9 @@ source config.env
 ./scripts/deploy.sh
 
 # STAGE 5 — run the ingestion pipeline (generate → load → chunk → embed → Lakebase + indexes)
-databricks bundle run sentiva_ingest -t dev --profile "$PROFILE"
+# (the BUNDLE_VAR_warehouse_id prefix lets the bundle's dashboard resource validate;
+#  the job itself runs with the values baked in at deploy time)
+BUNDLE_VAR_warehouse_id="$WAREHOUSE_ID" databricks bundle run sentiva_ingest -t dev --profile "$PROFILE"
 ```
 
 > **Important details (already handled by the scripts/config — listed for understanding)**
