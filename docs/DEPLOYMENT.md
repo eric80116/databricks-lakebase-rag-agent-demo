@@ -46,9 +46,8 @@ source config.env
 # STAGE 1 — catalog + Lakebase project
 ./scripts/bootstrap.sh
 ```
-**[Manual UI #1]** Lakebase → your project → **Settings → Enable Lakebase Search** (irreversible; restarts compute).
-
-**[Manual UI #2]** Workspace → Settings → **Previews** → enable **AI Prep Search**.
+**[Manual UI checkpoints — details in §1 Prerequisites]** Enable the two UI toggles now:
+**① Lakebase Search** before STAGE 2, and **② AI Prep Search** before STAGE 6.
 
 ```bash
 # STAGE 2 — Lakebase Search extensions + kb/mem schemas & tables
