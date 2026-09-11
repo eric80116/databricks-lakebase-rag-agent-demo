@@ -14,6 +14,8 @@ PROFILE="${1:-${PROFILE:-DEFAULT}}"
 CATALOG="${CATALOG:-dbx_agent_lakebase}"; SCHEMA="${SCHEMA:-rag}"
 APP_A="${APP_A_NAME:-sentiva-agent-api}"; APP_B="${APP_B_NAME:-sentiva-web}"
 SVC="${GATEWAY_SERVICE_ID:-sentiva_llm}"
+MLFLOW_EXPERIMENT="${MLFLOW_EXPERIMENT:-/Shared/sentiva-rag-traces}"
+CONFIG_FILE="$HERE/../config.env"
 # resolve the (possibly suffixed) project name that teardown targeted
 PROJECT="${LAKEBASE_PROJECT_ACTUAL:-${LAKEBASE_PROJECT:-sentiva-rag}}"
 
@@ -77,6 +79,16 @@ import json,sys
 d=json.load(sys.stdin); es=d if isinstance(d,list) else d.get('endpoints',[])
 print(sum(1 for e in es if 'sentiva' in e.get('name','').lower()))" 2>/dev/null || echo 0)
 [ "${SE:-0}" = "0" ] && pass "no stray sentiva serving endpoints" || fail "sentiva serving endpoint(s) remain ($SE)"
+
+echo "== MLflow experiment (stale binding breaks next deploy's UC trace tables) =="
+if databricks experiments get-by-name "$MLFLOW_EXPERIMENT" --profile "$PROFILE" >/dev/null 2>&1; then
+  warn "experiment '$MLFLOW_EXPERIMENT' still present — delete it (teardown does) or the next deploy skips recreating the OTel trace tables"
+else pass "MLflow experiment removed: $MLFLOW_EXPERIMENT"; fi
+
+echo "== config.env bookkeeping =="
+if [ -f "$CONFIG_FILE" ] && grep -q '^export LAKEBASE_PROJECT_ACTUAL=' "$CONFIG_FILE"; then
+  warn "LAKEBASE_PROJECT_ACTUAL still set in config.env — teardown should clear it so the next deploy uses a fresh suffix"
+else pass "LAKEBASE_PROJECT_ACTUAL cleared from config.env"; fi
 
 echo "== catalog =="
 if databricks catalogs get "$CATALOG" --profile "$PROFILE" >/dev/null 2>&1; then
