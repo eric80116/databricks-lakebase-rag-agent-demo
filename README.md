@@ -10,18 +10,46 @@ Change one file (`config.env`) to target a different workspace.
 
 ## Architecture
 
-```
-        Multilingual product docs (JSON + PDF) in a UC Volume
-                     │  ai_parse_document (PDF OCR) + ai_prep_search (semantic chunking)
-                     ▼
-   Unity Catalog Delta ──embed (Qwen3-Embedding-0.6B)──▶ Lakebase Search
-                                                          (kb.documents: lakebase_ann + lakebase_bm25)
- product web ─▶  App A: agent-api (FastAPI + LangChain)  ─▶ LLM via Unity AI Gateway (Gemini flash)
- App B (React) ─▶ POST /api/chat   ├─ hybrid retrieval (Lakebase vector + keyword)
-                                   ├─ conversation memory (Lakebase mem.chat_history)
-                                   └─ MLflow 3 tracing (OpenTelemetry) ─▶ Unity Catalog
-                                                     │
-                                    AI/BI dashboard ◀─ OTel span tables (per-step latency)
+Two flows: an **offline ingestion job** builds the knowledge base, and an **online agent**
+serves questions. Everything persists in Unity Catalog + Lakebase; every request is traced.
+
+```mermaid
+flowchart LR
+  subgraph Ingest["① Ingestion job (sentiva_ingest)"]
+    direction TB
+    docs["Multilingual docs<br/>JSON + PDF<br/>· UC Volume"]
+    parse["ai_parse_document (PDF OCR)<br/>+ ai_prep_search (chunking)"]
+    delta["Delta: docs_chunks"]
+    embed["Embed · Qwen3-0.6B"]
+    docs --> parse --> delta --> embed
+  end
+
+  kb[("Lakebase Search<br/>kb.documents<br/>lakebase_ann + bm25")]
+  mem[("Lakebase<br/>mem.chat_history")]
+  embed --> kb
+
+  subgraph Serve["② Serving"]
+    direction TB
+    web["Product web / App B (React UI)"]
+    appA["App A · FastAPI + LangChain"]
+    gw["Unity AI Gateway<br/>→ Gemini flash"]
+    web -->|POST /api/chat| appA
+    appA -->|LLM| gw
+  end
+
+  appA -->|hybrid retrieval| kb
+  appA -->|read/write memory| mem
+
+  subgraph Obs["③ Observability (Unity Catalog)"]
+    direction TB
+    otel[("MLflow OTel spans<br/>*_otel_spans")]
+    inf[("AI Gateway<br/>llm_inference_payload")]
+    dash["AI/BI dashboard"]
+    otel --> dash
+  end
+
+  appA -->|per-step traces| otel
+  gw -->|usage + payload| inf
 ```
 
 ## What it demonstrates
