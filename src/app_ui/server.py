@@ -51,7 +51,10 @@ http_client = None
 async def lifespan(app: FastAPI):
     # Startup
     global http_client
-    http_client = httpx.AsyncClient(timeout=30.0)
+    # The tool-calling agent makes multiple LLM calls; allow generous headroom (and let
+    # it be tuned via env). 30s was too tight and produced "Request to agent API timed out".
+    _timeout = float(os.getenv("AGENT_TIMEOUT_S", "120"))
+    http_client = httpx.AsyncClient(timeout=_timeout)
     print(f"Starting Sentiva Chat App")
     print(f"  AGENT_API_URL: {AGENT_API_URL or 'NOT SET'}")
     print(f"  USE_MOCK: {USE_MOCK}")
