@@ -69,9 +69,11 @@ databricks apps start "$APP_A" --profile "$PROFILE" 2>/dev/null || true  # ensur
 "$HERE/grant_app_access.sh" "$PROFILE" "$APP_A" "$LAKEBASE_PROJECT" || true
 
 echo "==> Deploying + starting apps..."
+# 'apps deploy' requires the app compute to already be RUNNING, so start each app
+# (idempotent; waits for compute) BEFORE deploying its source. App A was started above.
 databricks apps deploy "$APP_A" --source-code-path "$SRC/app_agent" --profile "$PROFILE" || true
-databricks apps deploy "$APP_B" --source-code-path "$SRC/app_ui" --profile "$PROFILE" || true
 databricks apps start "$APP_B" --profile "$PROFILE" 2>/dev/null || true
+databricks apps deploy "$APP_B" --source-code-path "$SRC/app_ui" --profile "$PROFILE" || true
 
 echo "==> Deploy complete."
 databricks apps get "$APP_A" --profile "$PROFILE" -o json | python3 -c "import json,sys;print('App A:',json.load(sys.stdin).get('url'))"
