@@ -7,6 +7,12 @@ bundle:
 include:
   - resources/*.yml
 
+# The built React frontend (src/app_ui/frontend/dist) is .gitignored, and bundle
+# sync honors .gitignore — so force-include it, or App B serves "Frontend not built".
+sync:
+  include:
+    - src/app_ui/frontend/dist/**
+
 variables:
   catalog:
     description: Unity Catalog catalog for all demo assets
