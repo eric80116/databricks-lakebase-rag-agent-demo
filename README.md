@@ -86,11 +86,16 @@ Response:
 Pass the same `session_id` across turns to keep memory. Authenticate with a workspace
 bearer token (`Authorization: Bearer <token>`).
 
+### `POST /api/chat/stream`
+Same request body; responds with **Server-Sent Events** for low latency (first token in
+~1–2s): `data: {"type":"token","text":"…"}` per token, then a final
+`data: {"type":"done","sources":[…],"timings":{…},"trace_id":"…"}`. The React UI uses this.
+
 ### `GET /api/health` → `{ "status": "ok" }`
 
 **App B** (`sentiva-web`, React UI) proxies to App A and adds helper endpoints:
 `GET /api/info` (agent URL) and `GET /api/token` (a short-lived bearer token for the
-Developer panel's copy-to-clipboard). App B also exposes the same `/api/chat` via its proxy.
+Developer panel's copy-to-clipboard). App B also proxies `/api/chat` and `/api/chat/stream`.
 
 ## Repo layout
 
