@@ -1,14 +1,19 @@
-"""Sentiva RAG agent — MLflow ResponsesAgent interface over an always-retrieve RAG flow.
+"""Sentiva agent — MLflow ResponsesAgent interface over a LangGraph create_react_agent.
 
-Adopts the official `ResponsesAgent` interface (Databricks' recommended way to author
-an agent deployed on Databricks Apps). The body is a deterministic RAG chain:
-retrieve (Lakebase Search) -> prompt -> Unity AI Gateway LLM -> memory. It is not a
-tool-calling agent — for this single-domain product-Q&A use case, always retrieving is
-more reliable than letting the model decide. Explicit MLflow spans around retrieval and
-the LLM call provide the per-step timing captured in the UC OTel trace tables (#3).
+A tool-calling agent: the LLM (routed through OUR Unity AI Gateway via ChatDatabricks)
+decides when to call `search_knowledge_base` (Lakebase Search), reads the results, and
+answers. Wrapped in the MLflow `ResponsesAgent` interface (Databricks' recommended way to
+author an agent on Databricks Apps). Swapping the model is a gateway-config change, so the
+agent is model-agnostic — see gateway_chat.py. (Reasoning models like Gemini 2.5/3.x can't
+tool-call via the gateway's unified surface; use deepseek / Claude / Llama.)
+
+Tracing (#3): mlflow.langchain.autolog() (enabled in app.py) captures the LangGraph spans
+(agent / ChatDatabricks / tool); the tool adds an explicit `retrieval` span. Sources and
+per-step timings are captured per request via ContextVars and returned in custom_outputs.
 """
 import time
 import uuid
+import threading
 
 try:
     import mlflow
@@ -17,86 +22,120 @@ except Exception:  # tracing is best-effort
 
 from mlflow.pyfunc import ResponsesAgent
 from mlflow.types.responses import ResponsesAgentRequest, ResponsesAgentResponse
+from langchain_core.tools import tool
+from langchain_core.runnables import RunnableConfig
+from langgraph.prebuilt import create_react_agent
 
 import retriever
 import memory
-import gateway_llm
+import gateway_chat
 
 SYSTEM_PROMPT = (
     "You are the support assistant for Sentiva, a consumer digital-safety company "
-    "(products: Sentiva Shield, Alert, Family, ID, Scan). Answer the user's question "
-    "using ONLY the provided context. Reply in the SAME language as the user's question. "
-    "If the context does not contain the answer, say you don't have that information. "
-    "Be concise and friendly. Do not invent prices, features, or facts not in the context."
+    "(products: Sentiva Shield, Alert, Family, ID, Scan). ALWAYS call the "
+    "search_knowledge_base tool before answering, and answer using ONLY its results. "
+    "Reply in the SAME language as the user's question. If the results don't contain the "
+    "answer, say you don't have that information. Be concise and friendly. Do not invent "
+    "prices, features, or facts."
 )
-
 
 _ROLE_MAP = {"human": "user", "user": "user", "ai": "assistant", "assistant": "assistant"}
 
-
-def _build_messages(question: str, context: str, history: list) -> list:
-    msgs = [{"role": "system", "content": SYSTEM_PROMPT}]
-    # Map stored memory roles (LangChain 'human'/'ai') to OpenAI roles ('user'/'assistant').
-    # Invalid roles make the gateway reject the request (400). Skip empty content.
-    for h in history:
-        content = (h.get("content") or "").strip()
-        if not content:
-            continue
-        msgs.append({"role": _ROLE_MAP.get(h.get("role"), "user"), "content": content})
-    user = f"Context:\n{context}\n\nQuestion: {question}"
-    msgs.append({"role": "user", "content": user})
-    return msgs
+# Per-request capture. LangGraph runs the tool on a different thread, so neither
+# ContextVar nor threading.local reaches back. Instead we pass a request id through the
+# graph's RunnableConfig (configurable), and the tool records sources/timing into this
+# registry keyed by that id. A lock makes it safe across concurrent requests.
+_REGISTRY = {}
+_REG_LOCK = threading.Lock()
+_REQ_ID_KEY = "sentiva_req_id"
 
 
-def _span(name):
-    """mlflow span context manager, or a no-op if mlflow unavailable."""
+@tool
+def search_knowledge_base(query: str, config: RunnableConfig = None) -> str:
+    """Search the Sentiva product knowledge base (multilingual: EN/JA/FR/DE) and return
+    the most relevant passages. Always call this before answering a product question."""
+    t = time.perf_counter()
     if mlflow is not None:
         try:
-            return mlflow.start_span(name=name)
+            with mlflow.start_span(name="retrieval"):
+                rows = retriever.retrieve(query)
         except Exception:
-            pass
-    from contextlib import nullcontext
-    return nullcontext()
+            rows = retriever.retrieve(query)
+    else:
+        rows = retriever.retrieve(query)
+    dt = (time.perf_counter() - t) * 1000
+
+    # record sources/timing into the per-request registry (keyed by the id passed via
+    # RunnableConfig), deduped across possibly-multiple tool calls
+    rid = ((config or {}).get("configurable") or {}).get(_REQ_ID_KEY)
+    if rid is not None:
+        with _REG_LOCK:
+            entry = _REGISTRY.get(rid)
+            if entry is not None:
+                seen = {s.get("source_uri") for s in entry["sources"]}
+                for s in retriever.to_sources(rows):
+                    if s.get("source_uri") not in seen:
+                        entry["sources"].append(s)
+                        seen.add(s.get("source_uri"))
+                entry["retr_ms"] += dt
+    return retriever.context_block(rows)
 
 
-def _last_user_text(items) -> str:
-    """Extract the latest user message text from ResponsesAgent input items."""
-    for it in reversed(list(items or [])):
-        role = getattr(it, "role", None)
-        content = getattr(it, "content", None)
-        if role is None and isinstance(it, dict):
-            role, content = it.get("role"), it.get("content")
-        if role == "user":
-            if isinstance(content, list):  # content parts [{type,text}, ...]
-                return "".join(
-                    (p.get("text", "") if isinstance(p, dict) else str(p)) for p in content
-                ).strip()
-            return content.strip() if isinstance(content, str) else str(content or "")
-    return ""
+_GRAPH = None
 
 
-def _run_rag(session_id: str, message: str):
-    """The RAG body: retrieve -> prompt -> gateway LLM -> persist memory. Returns
-    (answer_text, sources, timings). Emits 'retrieval' and 'llm' spans for #3."""
+def _graph():
+    """Build the react agent once (lazy — needs the app runtime's SP creds)."""
+    global _GRAPH
+    if _GRAPH is None:
+        _GRAPH = create_react_agent(
+            gateway_chat.build_llm(max_tokens=1024),
+            tools=[search_knowledge_base],
+            prompt=SYSTEM_PROMPT,
+        )
+    return _GRAPH
+
+
+def _msg_text(msg) -> str:
+    content = getattr(msg, "content", None)
+    if content is None and isinstance(msg, dict):
+        content = msg.get("content")
+    if isinstance(content, list):  # some models return content parts
+        return "".join(
+            (p.get("text", "") if isinstance(p, dict) else str(p)) for p in content
+        ).strip()
+    return (content or "").strip() if isinstance(content, str) else str(content or "")
+
+
+def _run_agent(session_id: str, message: str):
+    """Run the react agent for one turn. Returns (answer_text, sources, timings)."""
+    rid = uuid.uuid4().hex
+    with _REG_LOCK:
+        _REGISTRY[rid] = {"sources": [], "retr_ms": 0.0}
     t0 = time.perf_counter()
 
-    with _span("retrieval"):
-        rows = retriever.retrieve(message)
-        context = retriever.context_block(rows)
-        sources = retriever.to_sources(rows)
-    t_retr = time.perf_counter()
-
     history = memory.load_history(session_id)
-    msgs = _build_messages(message, context, history)
+    msgs = [
+        {"role": _ROLE_MAP.get(h.get("role"), "user"), "content": (h.get("content") or "").strip()}
+        for h in history
+        if (h.get("content") or "").strip()
+    ]
+    msgs.append({"role": "user", "content": message})
 
-    with _span("llm"):
-        answer_text, usage = gateway_llm.chat(msgs, max_tokens=1024)
-        if mlflow is not None and usage:
-            try:
-                mlflow.update_current_trace(tags={"total_tokens": str(usage.get("total_tokens", ""))})
-            except Exception:
-                pass
-    t_llm = time.perf_counter()
+    try:
+        result = _graph().invoke(
+            {"messages": msgs},
+            config={"configurable": {_REQ_ID_KEY: rid}},
+        )
+        answer_text = _msg_text(result["messages"][-1])
+        total_ms = (time.perf_counter() - t0) * 1000
+        with _REG_LOCK:
+            entry = _REGISTRY.get(rid, {})
+        retr_ms = entry.get("retr_ms", 0.0)
+        sources = entry.get("sources", [])
+    finally:
+        with _REG_LOCK:
+            _REGISTRY.pop(rid, None)
 
     # persist turn (best-effort)
     try:
@@ -106,12 +145,10 @@ def _run_rag(session_id: str, message: str):
         pass
 
     timings = {
-        "retrieval_ms": round((t_retr - t0) * 1000, 1),
-        "llm_ms": round((t_llm - t_retr) * 1000, 1),
-        "total_ms": round((t_llm - t0) * 1000, 1),
+        "retrieval_ms": round(retr_ms, 1),
+        "llm_ms": round(max(total_ms - retr_ms, 0.0), 1),
+        "total_ms": round(total_ms, 1),
     }
-    # Persist per-step metrics as trace tags (queryable metadata; survives even if
-    # the detailed span artifact can't upload from the app's network).
     if mlflow is not None:
         try:
             mlflow.update_current_trace(tags={
@@ -128,18 +165,18 @@ def _run_rag(session_id: str, message: str):
 
 
 class SentivaAgent(ResponsesAgent):
-    """Always-retrieve RAG served through the MLflow ResponsesAgent interface.
+    """Tool-calling RAG agent served through the MLflow ResponsesAgent interface.
 
-    `predict` takes a ResponsesAgentRequest (the current turn in `input`, the
-    conversation key in `custom_inputs.session_id`) and returns the answer as a text
-    output item; retrieval sources and per-step timings ride in `custom_outputs`.
+    `predict` takes a ResponsesAgentRequest (current turn in `input`, conversation key in
+    `custom_inputs.session_id`) and returns the answer as a text output item; retrieval
+    sources and per-step timings ride in `custom_outputs`.
     """
 
     def predict(self, request: ResponsesAgentRequest) -> ResponsesAgentResponse:
         ci = request.custom_inputs or {}
         session_id = ci.get("session_id", "default")
         message = _last_user_text(request.input)
-        answer_text, sources, timings = _run_rag(session_id, message)
+        answer_text, sources, timings = _run_agent(session_id, message)
         item = self.create_text_output_item(text=answer_text, id=str(uuid.uuid4()))
         return ResponsesAgentResponse(
             output=[item],
@@ -147,12 +184,25 @@ class SentivaAgent(ResponsesAgent):
         )
 
 
+def _last_user_text(items) -> str:
+    for it in reversed(list(items or [])):
+        role = getattr(it, "role", None)
+        content = getattr(it, "content", None)
+        if role is None and isinstance(it, dict):
+            role, content = it.get("role"), it.get("content")
+        if role == "user":
+            if isinstance(content, list):
+                return "".join(
+                    (p.get("text", "") if isinstance(p, dict) else str(p)) for p in content
+                ).strip()
+            return content.strip() if isinstance(content, str) else str(content or "")
+    return ""
+
+
 AGENT = SentivaAgent()
 
 
 def _output_text(resp: ResponsesAgentResponse) -> str:
-    # ResponsesAgentResponse validates output items into OutputItem models, so
-    # normalize via model_dump() (dict passthrough if it's already a dict).
     for it in (resp.output or []):
         d = it if isinstance(it, dict) else (it.model_dump() if hasattr(it, "model_dump") else {})
         for part in (d.get("content") or []):
@@ -162,8 +212,8 @@ def _output_text(resp: ResponsesAgentResponse) -> str:
 
 
 def answer(session_id: str, message: str):
-    """Back-compat helper for app.py — runs the turn through the ResponsesAgent
-    interface and unpacks (answer_text, sources, timings)."""
+    """Back-compat helper for app.py — runs the turn through the ResponsesAgent interface
+    and unpacks (answer_text, sources, timings)."""
     req = ResponsesAgentRequest(
         input=[{"role": "user", "content": message}],
         custom_inputs={"session_id": session_id},

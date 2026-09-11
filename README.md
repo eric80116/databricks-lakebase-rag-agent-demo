@@ -30,8 +30,8 @@ flowchart LR
   subgraph Serve["② Serving"]
     direction TB
     web["Product web / App B (React UI)"]
-    appA["App A · FastAPI + ResponsesAgent"]
-    gw["Unity AI Gateway<br/>→ Gemini flash"]
+    appA["App A · FastAPI + ResponsesAgent<br/>(LangGraph tool-calling)"]
+    gw["Unity AI Gateway<br/>→ LLM (deepseek-v4-flash)"]
     web -->|POST /api/chat| appA
     appA -->|LLM| gw
   end
@@ -55,12 +55,12 @@ flowchart LR
 
 | Area | Detail |
 |---|---|
-| **Agent** | MLflow `ResponsesAgent` + FastAPI, deployed as a Databricks App, with per-request MLflow tracing |
+| **Agent** | MLflow `ResponsesAgent` + LangGraph `create_react_agent` (tool-calling) + FastAPI, deployed as a Databricks App, with per-request MLflow tracing. Retrieval is a tool; the model is swappable via config |
 | **Knowledge base** | **Lakebase Search** — `lakebase_vector` (ANN) + `lakebase_text` (BM25) hybrid retrieval |
 | **Memory** | Lakebase (Postgres) chat history; multi-turn context |
 | **Ingestion job** | generate → load JSON → `ai_parse_document` (PDF OCR) → `ai_prep_search` chunking → embed → Lakebase + build indexes |
 | **Embedding** | `databricks-qwen3-embedding-0-6b` (1024-dim, multilingual) |
-| **LLM** | Databricks-hosted Gemini flash, fronted by **Unity AI Gateway** (usage tracking + inference tables) |
+| **LLM** | Databricks-hosted `deepseek-v4-flash`, fronted by **Unity AI Gateway** (usage tracking + inference tables); swap models by changing `LLM_ENDPOINT`. (Tool-calling needs a non-reasoning model — Gemini 2.5/3.x drop their thought_signature on tool calls) |
 | **Web UI** | React app with multilingual quick-question cards + a Developer panel (copy runnable curl / token) |
 | **Observability** | MLflow 3 traces in **OpenTelemetry format inside Unity Catalog** + an AI/BI dashboard |
 | **Ops** | DAB deploy, non-destructive preflight checks, one-click test suite, clean teardown |
@@ -99,7 +99,7 @@ databricks.yml            DAB bundle (jobs / apps / dashboard / schema / volume)
 config.env.example        the single per-environment config (copy to config.env)
 resources/                DAB resource definitions
 scripts/                  preflight, bootstrap, deploy, grants, teardown, test_all
-src/app_agent/            App A — MLflow ResponsesAgent + FastAPI
+src/app_agent/            App A — MLflow ResponsesAgent + LangGraph tool-calling + FastAPI
 src/app_ui/               App B — React UI + FastAPI proxy
 src/jobs/ + src/data_gen/ ingestion pipeline + synthetic multilingual doc generators
 dashboards/               AI/BI dashboard definition

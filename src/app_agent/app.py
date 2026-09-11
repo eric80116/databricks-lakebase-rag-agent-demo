@@ -39,6 +39,10 @@ try:
     except Exception as e:
         log.warning("UC trace_location bind failed (%s); using plain experiment", e)
         mlflow.set_experiment(_exp)
+    try:
+        mlflow.langchain.autolog()  # traces the LangGraph react agent (nodes / ChatDatabricks / tool)
+    except Exception as e:
+        log.warning("langchain autolog unavailable: %s", e)
     _mlflow = mlflow
     log.info("MLflow tracing enabled")
 except Exception as e:

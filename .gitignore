@@ -36,3 +36,7 @@ src/app_ui/frontend/vite.config.d.ts
 
 # --- misc ---
 *.bak
+
+# local mlflow test artifacts
+mlflow.db
+mlruns/

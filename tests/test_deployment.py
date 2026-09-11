@@ -99,6 +99,8 @@ def test_otel_spans_in_uc(profile):
 
 
 def test_otel_per_step_timing(profile):
-    rows = q(f"SELECT name FROM {FQ}.{PREFIX}_otel_spans WHERE name IN ('retrieval','llm') GROUP BY name", profile)
+    # The tool-calling agent emits an explicit 'retrieval' span; the LLM call is traced
+    # by autolog as a 'ChatDatabricks' (CHAT_MODEL) span via the Unity AI Gateway.
+    rows = q(f"SELECT name FROM {FQ}.{PREFIX}_otel_spans WHERE name IN ('retrieval','ChatDatabricks') GROUP BY name", profile)
     names = {r["name"] for r in rows}
-    assert "retrieval" in names and "llm" in names, f"missing step spans: {names}"
+    assert "retrieval" in names and "ChatDatabricks" in names, f"missing step spans: {names}"
