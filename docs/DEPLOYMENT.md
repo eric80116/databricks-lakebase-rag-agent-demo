@@ -23,7 +23,7 @@ cleanly. **To target a different workspace, you only edit `config.env`.**
 - Local tools: `python3`, `psql` (postgresql-client), `node`/`npm`, `envsubst` (gettext), `bash`.
 - A CLI profile that can reach the target workspace. Permissions: able to create a catalog / Lakebase project / serving / apps (the demo used a workspace admin).
 - Compute: a **serverless SQL warehouse** (serverless environment v3+ / DBR 17.3+). Note: `ai_parse_document` / `ai_prep_search` are only available in some regions — check Databricks' [AI function region availability](https://www.databricks.com/resources/feature-region-support) for your workspace.
-- **Edit `config.env`**: the only file to change per environment (profile, catalog, schema, Lakebase project, warehouse, models, `CATALOG_STORAGE_ROOT`).
+- **Set up `config.env`**: run **`./scripts/setup_config.sh`** — an interactive wizard that prompts for each value with a default (Enter to accept), auto-detects a serverless warehouse, and can suggest a storage root. (Or copy `config.env.example` to `config.env` and edit by hand.) It's the only per-environment config.
   - `CATALOG_STORAGE_ROOT`: some metastores require an explicit managed storage location. Leave it empty to have `scripts/detect_storage_root.sh` suggest one; or set `DEFAULT` if your metastore has default managed storage.
 
 ### ⚠️ Two toggles you MUST enable in the UI (not available via CLI)
@@ -40,6 +40,7 @@ These are manual checkpoints during deployment; `scripts/preflight.sh` verifies 
 > being set (otherwise the CLI falls back to another profile and auth fails).
 
 ```bash
+./scripts/setup_config.sh   # first time only: fill in config.env interactively
 source config.env
 
 # STAGE 0 — preflight (non-destructive; state-aware; deploy.sh also runs it automatically)
