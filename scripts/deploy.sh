@@ -16,7 +16,7 @@ LAKEBASE_PROJECT="${LAKEBASE_PROJECT_ACTUAL:-${LAKEBASE_PROJECT:-sentiva-rag}}"
 
 # Preflight: verify prerequisites before deploying (skip with SKIP_PREFLIGHT=1).
 if [ "${SKIP_PREFLIGHT:-0}" != "1" ]; then
-  "$HERE/preflight.sh" --full || { echo "!! Preflight failed — aborting deploy (SKIP_PREFLIGHT=1 to override)."; exit 1; }
+  "$HERE/preflight.sh" || { echo "!! Preflight failed — aborting deploy (SKIP_PREFLIGHT=1 to override)."; exit 1; }
 fi
 
 APP_A="${APP_A_NAME:-sentiva-agent-api}"

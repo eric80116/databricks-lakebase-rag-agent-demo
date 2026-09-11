@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Sentiva RAG — one-click "test all functions".
-#   1. preflight --full (infra prerequisites, incl. Lakebase Search + ai_prep_search)
+#   1. preflight (infra prerequisites, incl. Lakebase Search + ai_prep_search)
 #   2. pytest tests/ -v (13 end-to-end checks against the deployed demo)
 # Auto-creates a venv for pytest (avoids PEP 668). Skip preflight: SKIP_PREFLIGHT=1
 #
@@ -13,7 +13,7 @@ cd "$ROOT"
 
 echo "================= 1/2  PREFLIGHT ================="
 if [ "${SKIP_PREFLIGHT:-0}" != "1" ]; then
-  "$HERE/preflight.sh" --full || { echo "!! Preflight failed — fix ✗ items (or SKIP_PREFLIGHT=1 to force tests)."; exit 1; }
+  "$HERE/preflight.sh" || { echo "!! Preflight failed — fix ✗ items (or SKIP_PREFLIGHT=1 to force tests)."; exit 1; }
 else
   echo "(skipped)"
 fi

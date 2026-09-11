@@ -27,7 +27,7 @@ cleanly. **To target a different workspace, you only edit `config.env`.**
   - `CATALOG_STORAGE_ROOT`: some metastores require an explicit managed storage location. Leave it empty to have `scripts/detect_storage_root.sh` suggest one; or set `DEFAULT` if your metastore has default managed storage.
 
 ### ⚠️ Two toggles you MUST enable in the UI (not available via CLI)
-These are manual checkpoints during deployment; `scripts/preflight.sh --full` verifies whether they are on:
+These are manual checkpoints during deployment; `scripts/preflight.sh` verifies whether they are on:
 1. **Lakebase Search**: Lakebase → your project → Settings → **Enable Lakebase Search** (irreversible; restarts the project compute). → enable after `bootstrap.sh` (STAGE 1) and before `bootstrap_search.sh` (STAGE 2).
 2. **AI Prep Search preview**: Workspace → Settings → **Previews** → enable **AI Prep Search** (`ai_parse_document` does not need it; `ai_prep_search` does). → enable before running the ingest job.
 
@@ -38,10 +38,9 @@ These are manual checkpoints during deployment; `scripts/preflight.sh --full` ve
 ```bash
 source config.env
 
-# STAGE 0 — preflight (non-destructive; deploy.sh also runs it automatically)
+# STAGE 0 — preflight (non-destructive; state-aware; deploy.sh also runs it automatically)
 ./scripts/preflight.sh            # tools / auth / serverless warehouse / models / storage / bundle
-# (after bootstrap + the two UI toggles, run the full check for Lakebase Search + ai_prep_search)
-./scripts/preflight.sh --full
+# (it also checks Lakebase Search + ai_prep_search once the project exists — just re-run it later)
 
 # STAGE 1 — catalog + Lakebase project
 ./scripts/bootstrap.sh
@@ -83,7 +82,7 @@ databricks bundle run sentiva_ingest -t dev --profile "$PROFILE"
 Other options:
 ```bash
 pytest tests/ -v                 # just the 13 tests (needs pytest installed; see tests/README.md)
-./scripts/preflight.sh --full    # just the infra checks
+./scripts/preflight.sh    # just the infra checks
 ```
 `test_all.sh` is a one-click entry point around `tests/` (same suite) plus preflight and env setup.
 
@@ -98,12 +97,4 @@ pytest tests/ -v                 # just the 13 tests (needs pytest installed; se
 teardown does: `bundle destroy` (schema/volume/jobs/apps/dashboard) → delete the AI Gateway model-service → drop the inference table → delete the Lakebase project → clear `LAKEBASE_PROJECT_ACTUAL` from config.env → (optionally) drop the catalog.
 
 > **Lakebase project-name safety**: `bootstrap.sh` creates `<LAKEBASE_PROJECT>-<random>` and records the actual name as `LAKEBASE_PROJECT_ACTUAL` in config.env (all later stages use it). Because a deleted Lakebase project name stays reserved for a while, teardown clears that record so the **next deploy uses a fresh suffix and never collides**.
-> Cost note: the Lakebase suspend timeout defaults to 24h (not settable via CLI); always run teardown + verify when done (see §5).
-
----
-
-## 5. UI-required items (summary)
-Things the CLI cannot do — handle them in the workspace UI (`preflight.sh --full` verifies the first two):
-1. **Lakebase Search** — see §1 (Enable Lakebase Search).
-2. **AI Prep Search preview** — see §1 (Previews → AI Prep Search).
-3. (optional) **Lakebase suspend timeout** — defaults to 24h before scale-to-zero and is not settable via CLI. To save more, shorten it in the Lakebase compute settings, or just rely on teardown (§4).
+> Cost note: the Lakebase suspend timeout defaults to 24h before scale-to-zero and is not settable via CLI — shorten it in the Lakebase compute settings if you want, or just rely on teardown. Always run teardown + verify when done.

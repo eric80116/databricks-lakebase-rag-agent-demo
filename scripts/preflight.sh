@@ -4,16 +4,13 @@
 # BEFORE deploying so you don't fail halfway. Prints PASS/WARN/FAIL and exits
 # non-zero if any hard requirement is missing.
 #
-# Usage: scripts/preflight.sh [--stage1|--stage2|--full]
-#   --stage1 (default): checks runnable BEFORE bootstrap (tools, auth, models, ...)
-#   --stage2: additionally checks things that need the Lakebase project + previews
-#             (Lakebase Search extensions, ai_prep_search preview) — run after
-#             bootstrap.sh + enabling Lakebase Search in the UI.
-#   --full: stage1 + stage2.
+# Usage: scripts/preflight.sh   (no flags; state-aware)
+# Auto-detects state: the Lakebase-Search / ai_prep_search checks run only once the
+# Lakebase project exists (i.e. after bootstrap + the UI toggles). Run it as often as
+# you like — it checks whatever is applicable right now. No flags needed.
 # ==============================================================================
 set -uo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"; ROOT="$(cd "$HERE/.." && pwd)"
-MODE="${1:---stage1}"
 FAILS=0; WARNS=0
 pass(){ printf "  \033[32m✓\033[0m %s\n" "$1"; }
 warn(){ printf "  \033[33m⚠\033[0m %s\n" "$1"; WARNS=$((WARNS+1)); }
@@ -85,11 +82,21 @@ elif [ -n "${CATALOG_STORAGE_ROOT:-}" ]; then pass "CATALOG_STORAGE_ROOT set ($C
 else warn "CATALOG_STORAGE_ROOT empty — run scripts/detect_storage_root.sh and set it (this metastore needs it)"; fi
 
 echo "== bundle validate =="
+export BUNDLE_VAR_warehouse_id="${WAREHOUSE_ID:-}" BUNDLE_VAR_catalog="$CATALOG" BUNDLE_VAR_schema="$SCHEMA" \
+  BUNDLE_VAR_lakebase_project="$LAKEBASE_PROJECT" BUNDLE_VAR_gateway_service_id="${GATEWAY_SERVICE_ID:-sentiva_llm}" \
+  BUNDLE_VAR_mlflow_experiment="${MLFLOW_EXPERIMENT:-/Shared/sentiva-rag-traces}" BUNDLE_VAR_volume="${VOLUME:-raw_docs}" \
+  BUNDLE_VAR_app_a_name="${APP_A_NAME:-sentiva-agent-api}" BUNDLE_VAR_app_b_name="${APP_B_NAME:-sentiva-web}" \
+  BUNDLE_VAR_llm_endpoint="${LLM_ENDPOINT:-databricks-gemini-3-5-flash}" BUNDLE_VAR_embedding_endpoint="${EMBEDDING_ENDPOINT:-databricks-qwen3-embedding-0-6b}"
 if databricks bundle validate -t dev --profile "$PROFILE" >/tmp/pf_bundle.txt 2>&1; then pass "bundle validate OK"
 else fail "bundle validate failed (see /tmp/pf_bundle.txt)"; fi
 
-if [ "$MODE" = "--stage2" ] || [ "$MODE" = "--full" ]; then
-  echo "== stage2: Lakebase Search + AI Prep Search (need bootstrap + UI toggles) =="
+# These need the Lakebase project to exist (post-bootstrap) + the UI toggles done.
+PROJECT_EXISTS=$(databricks postgres list-projects --profile "$PROFILE" -o json 2>/dev/null | python3 -c "
+import json,sys
+d=json.load(sys.stdin); ps=d if isinstance(d,list) else d.get('projects',[])
+print('yes' if any(p.get('project_id')=='$LAKEBASE_PROJECT' for p in ps) else 'no')" 2>/dev/null || echo no)
+if [ "$PROJECT_EXISTS" = "yes" ]; then
+  echo "== Lakebase Search + AI Prep Search (project exists — verifying UI toggles) =="
   # ai_prep_search preview
   APS=$(databricks experimental aitools tools query "SELECT ai_prep_search('hello world test') AS r" --profile "$PROFILE" 2>&1)
   if echo "$APS" | grep -qi 'not enabled'; then fail "AI Prep Search preview NOT enabled (Workspace Settings -> Previews)"
@@ -103,16 +110,18 @@ if [ "$MODE" = "--stage2" ] || [ "$MODE" = "--full" ]; then
     EXT=$(PGPASSWORD="$LT" psql "host=$LH user=${ME:-} dbname=databricks_postgres sslmode=require" -tA -c "SELECT string_agg(extname,',') FROM pg_extension WHERE extname IN ('lakebase_vector','lakebase_text')" 2>/dev/null)
     echo "$EXT" | grep -q lakebase_vector && pass "Lakebase Search extensions installed ($EXT)" || fail "Lakebase Search NOT enabled — UI: project Settings -> Enable Lakebase Search, then bootstrap_search.sh"
   else
-    warn "skipped Lakebase Search check (project not created yet or psql missing)"
+    warn "skipped Lakebase Search check (psql missing)"
   fi
+else
+  echo "== Lakebase Search + AI Prep Search =="
+  warn "Lakebase project not created yet — re-run preflight after bootstrap + the UI toggles to verify these"
 fi
 
 echo "== MANUAL UI steps (CLI cannot do these; enable in the workspace UI) =="
 echo "  1. Lakebase project '${LAKEBASE_PROJECT:-sentiva-rag}' -> Settings -> Enable Lakebase Search (irreversible)"
-echo "     (needed AFTER bootstrap.sh; verified by: scripts/preflight.sh --full)"
+echo "     (needed AFTER bootstrap.sh; auto-verified when you re-run preflight)"
 echo "  2. Workspace -> Settings -> Previews -> enable 'AI Prep Search'"
-echo "     (needed before running the ingest job; verified by: scripts/preflight.sh --full)"
-[ "$MODE" = "--stage1" ] && echo "  (run 'scripts/preflight.sh --full' after step 1 to auto-verify both)"
+echo "     (needed before running the ingest job; auto-verified when you re-run preflight)"
 
 echo
 echo "== summary: $FAILS fail, $WARNS warn =="
