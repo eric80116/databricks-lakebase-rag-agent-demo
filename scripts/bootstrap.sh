@@ -22,7 +22,7 @@ PROJECT_BASE="${3:-${LAKEBASE_PROJECT:-sentiva-rag}}"
 STORAGE_ROOT="${CATALOG_STORAGE_ROOT:-}"
 CONFIG_FILE="$HERE/../config.env"
 
-echo "==> [STAGE 1] Profile=$PROFILE  Catalog=$CATALOG  LakebaseProject=$PROJECT"
+echo "==> [STAGE 1] Profile=$PROFILE  Catalog=$CATALOG  LakebaseProject(base)=$PROJECT_BASE"
 
 # --- 1. Catalog (managed storage root handling) -----------------------------
 if databricks catalogs get "$CATALOG" --profile "$PROFILE" >/dev/null 2>&1; then
