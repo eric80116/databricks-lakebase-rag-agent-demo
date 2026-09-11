@@ -82,12 +82,6 @@ BUNDLE_VAR_warehouse_id="$WAREHOUSE_ID" databricks bundle run sentiva_ingest -t 
 # one-click: preflight (infra) + 13 end-to-end tests + summary (auto-creates a pytest venv)
 ./scripts/test_all.sh
 ```
-Other options:
-```bash
-pytest tests/ -v                 # just the 13 tests (needs pytest installed; see tests/README.md)
-./scripts/preflight.sh    # just the infra checks
-```
-`test_all.sh` is a one-click entry point around `tests/` (same suite) plus preflight and env setup.
 
 ---
 
