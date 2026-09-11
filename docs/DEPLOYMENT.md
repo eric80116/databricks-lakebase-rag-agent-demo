@@ -22,7 +22,7 @@ cleanly. **To target a different workspace, you only edit `config.env`.**
 - **Databricks CLI** ≥ v0.294.0 (this demo used v1.14.0).
 - Local tools: `python3`, `psql` (postgresql-client), `node`/`npm`, `envsubst` (gettext), `bash`.
 - A CLI profile that can reach the target workspace. Permissions: able to create a catalog / Lakebase project / serving / apps (the demo used a workspace admin).
-- Region: the AI functions need a **serverless SQL warehouse** in a US/EU region.
+- Compute: a **serverless SQL warehouse** (serverless environment v3+ / DBR 17.3+). Note: `ai_parse_document` / `ai_prep_search` are only available in some regions — check Databricks' [AI function region availability](https://www.databricks.com/resources/feature-region-support) for your workspace.
 - **Edit `config.env`**: the only file to change per environment (profile, catalog, schema, Lakebase project, warehouse, models, `CATALOG_STORAGE_ROOT`).
   - `CATALOG_STORAGE_ROOT`: some metastores require an explicit managed storage location. Leave it empty to have `scripts/detect_storage_root.sh` suggest one; or set `DEFAULT` if your metastore has default managed storage.
 

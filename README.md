@@ -120,6 +120,8 @@ TL;DR: `cp config.env.example config.env` → edit it → follow docs/DEPLOYMENT
 ## Notes
 
 - "Sentiva" and all documents are **synthetic demo content**.
-- Requires a Unity Catalog workspace with a **serverless SQL warehouse** in a US/EU region
-  (for `ai_parse_document` / `ai_prep_search`) and Lakebase (Postgres Autoscaling).
+- Requires a Unity Catalog workspace with a **serverless SQL warehouse** (serverless
+  environment v3+ / DBR 17.3+) and Lakebase (Postgres Autoscaling). The AI functions
+  `ai_parse_document` / `ai_prep_search` are only available in certain regions — check
+  Databricks' [AI function region availability](https://www.databricks.com/resources/feature-region-support) for your workspace.
 - No secrets are stored in the repo; short-lived tokens are fetched at runtime.
