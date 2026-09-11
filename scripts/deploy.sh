@@ -75,6 +75,10 @@ databricks apps deploy "$APP_A" --source-code-path "$SRC/app_agent" --profile "$
 databricks apps start "$APP_B" --profile "$PROFILE" 2>/dev/null || true
 databricks apps deploy "$APP_B" --source-code-path "$SRC/app_ui" --profile "$PROFILE" || true
 
+# Trace tables are created lazily by the SP on the first trace and are SP-owned;
+# warm up + grant SELECT so the dashboard and tests can read them.
+"$HERE/grant_trace_access.sh" "$PROFILE" || true
+
 echo "==> Deploy complete."
 databricks apps get "$APP_A" --profile "$PROFILE" -o json | python3 -c "import json,sys;print('App A:',json.load(sys.stdin).get('url'))"
 databricks apps get "$APP_B" --profile "$PROFILE" -o json | python3 -c "import json,sys;print('App B:',json.load(sys.stdin).get('url'))"

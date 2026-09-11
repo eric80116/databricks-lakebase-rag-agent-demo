@@ -50,6 +50,20 @@ databricks ai-gateway delete-model-service "model-services/${CATALOG}.${SCHEMA:-
 echo "==> Dropping inference payload table (if present)..."
 databricks experimental aitools tools query "DROP TABLE IF EXISTS ${CATALOG}.${SCHEMA:-rag}.llm_inference_payload" --profile "$PROFILE" 2>/dev/null || echo "   (skip)"
 
+# The MLflow experiment lives in the workspace (NOT the catalog), so bundle destroy
+# leaves it behind. Its UC trace-location binding (catalog.schema.prefix) is fixed at
+# creation, so a stale experiment makes the NEXT deploy skip recreating the otel tables
+# (which WERE dropped with the schema) -> traces fail with TABLE_DOES_NOT_EXIST. Delete it.
+echo "==> Deleting MLflow experiment '${MLFLOW_EXPERIMENT:-/Shared/sentiva-rag-traces}' (frees the trace-location binding)..."
+EXP_ID=$(databricks experiments get-by-name "${MLFLOW_EXPERIMENT:-/Shared/sentiva-rag-traces}" --profile "$PROFILE" -o json 2>/dev/null \
+  | python3 -c "import json,sys; d=json.load(sys.stdin); print((d.get('experiment') or d).get('experiment_id',''))" 2>/dev/null || echo "")
+if [ -n "$EXP_ID" ]; then
+  databricks experiments delete-experiment "$EXP_ID" --profile "$PROFILE" 2>/dev/null \
+    && echo "   deleted experiment $EXP_ID" || echo "   (delete failed — remove it in the MLflow UI)"
+else
+  echo "   (experiment not present)"
+fi
+
 echo "==> Deleting Lakebase project '$PROJECT' (all branches/data)..."
 databricks postgres delete-project "projects/$PROJECT" --profile "$PROFILE" 2>/dev/null \
   || echo "   (not present or already deleted)"
