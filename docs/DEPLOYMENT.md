@@ -62,8 +62,6 @@ source config.env
 databricks bundle run sentiva_ingest -t dev --profile "$PROFILE"
 ```
 
-> `create_gateway.sh` runs automatically inside `deploy.sh` (after the UC schema exists). You can also run it standalone, but only after the schema has been created.
-
 > **Important details (already handled by the scripts/config — listed for understanding)**
 > - Databricks Apps must listen on **`$DATABRICKS_APP_PORT`** (8000 in some workspaces, not 8080) — app.yaml uses `uvicorn ... --port ${DATABRICKS_APP_PORT:-8080}`.
 > - The app service principal needs UC grants (`grant_app_access.sh` handles them): `USE CATALOG` / `USE SCHEMA` / `EXECUTE` / `CREATE TABLE` / `SELECT` / `MODIFY ON SCHEMA` + warehouse `CAN_USE`, plus Lakebase kb/mem grants.
