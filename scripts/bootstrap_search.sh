@@ -47,4 +47,9 @@ if echo "$OUT" | grep -qi 'must be loaded via shared_preload_libraries'; then
   exit 1
 fi
 
-echo "==> STAGE 2 complete. Next: databricks bundle deploy -t dev --profile $PROFILE"
+echo "==> STAGE 2 complete. Next steps (see docs/DEPLOYMENT.md §2):"
+echo "    STAGE 3: scripts/create_gateway.sh"
+echo "    STAGE 4: cd src/app_ui/frontend && npm install && npm run build"
+echo "    STAGE 5: scripts/deploy.sh"
+echo "    [UI] enable the AI Prep Search preview, then"
+echo "    STAGE 6: databricks bundle run sentiva_ingest -t dev --profile $PROFILE"
