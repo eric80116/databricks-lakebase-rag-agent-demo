@@ -45,8 +45,7 @@ source config.env
 # STAGE 1 — catalog + Lakebase project
 ./scripts/bootstrap.sh
 ```
-**[Manual UI checkpoints — details in §1 Prerequisites]** Enable the two UI toggles now:
-**① Lakebase Search** before STAGE 2, and **② AI Prep Search** before STAGE 6.
+**[Manual UI checkpoint ① — see §1]** Enable **Lakebase Search** on the project now (required before STAGE 2).
 
 ```bash
 # STAGE 2 — Lakebase Search extensions + kb/mem schemas & tables
@@ -61,7 +60,9 @@ source config.env
 # STAGE 5 — render app.yaml/SQL/dashboard from config.env, deploy the DAB,
 #           deploy + start the apps, and grant the app service principal
 ./scripts/deploy.sh
-
+```
+**[Manual UI checkpoint ② — see §1]** Enable the **AI Prep Search** preview now (required before STAGE 6).
+```bash
 # STAGE 6 — run the ingestion pipeline (generate → load → chunk → embed → Lakebase + indexes)
 databricks bundle run sentiva_ingest -t dev --profile "$PROFILE"
 ```
