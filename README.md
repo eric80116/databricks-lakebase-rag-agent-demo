@@ -114,7 +114,7 @@ manual UI toggles in its Prerequisites) and **[docs/DEMO.md](docs/DEMO.md)** for
 walkthrough (UI, API, tracing, dashboard).
 
 TL;DR: `cp config.env.example config.env` → edit it → follow docs/DEPLOYMENT.md
-(`preflight → bootstrap → [UI toggles] → bootstrap_search → create_gateway → build UI → deploy → run ingest`)
+(`preflight → bootstrap → [UI] → bootstrap_search → build UI → deploy → [UI] → run ingest`)
 → verify with `./scripts/test_all.sh`.
 
 ## Notes

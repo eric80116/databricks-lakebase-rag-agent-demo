@@ -51,21 +51,20 @@ source config.env
 # STAGE 2 — Lakebase Search extensions + kb/mem schemas & tables
 ./scripts/bootstrap_search.sh
 
-# STAGE 3 — Unity AI Gateway model-service (usage tracking + inference table)
-./scripts/create_gateway.sh
-
-# STAGE 4 — build the React UI
+# STAGE 3 — build the React UI
 ( cd src/app_ui/frontend && npm install && npm run build )
 
-# STAGE 5 — render app.yaml/SQL/dashboard from config.env, deploy the DAB,
-#           deploy + start the apps, and grant the app service principal
+# STAGE 4 — render config, deploy the DAB (schema / volume / job / apps / dashboard),
+#           create the Unity AI Gateway model-service, grant the SP, deploy + start apps
 ./scripts/deploy.sh
 ```
-**[Manual UI checkpoint ② — see §1]** Enable the **AI Prep Search** preview now (required before STAGE 6).
+**[Manual UI checkpoint ② — see §1]** Enable the **AI Prep Search** preview now (required before STAGE 5).
 ```bash
-# STAGE 6 — run the ingestion pipeline (generate → load → chunk → embed → Lakebase + indexes)
+# STAGE 5 — run the ingestion pipeline (generate → load → chunk → embed → Lakebase + indexes)
 databricks bundle run sentiva_ingest -t dev --profile "$PROFILE"
 ```
+
+> `create_gateway.sh` is run automatically inside `deploy.sh` (after the UC schema exists). You can also run it standalone, but only after the schema has been created.
 
 > **Important details (already handled by the scripts/config — listed for understanding)**
 > - Databricks Apps must listen on **`$DATABRICKS_APP_PORT`** (8000 in some workspaces, not 8080) — app.yaml uses `uvicorn ... --port ${DATABRICKS_APP_PORT:-8080}`.

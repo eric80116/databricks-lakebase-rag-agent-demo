@@ -53,6 +53,11 @@ export BUNDLE_VAR_catalog="$CATALOG" BUNDLE_VAR_schema="$SCHEMA" \
   BUNDLE_VAR_app_a_name="$APP_A" BUNDLE_VAR_app_b_name="$APP_B"
 databricks bundle deploy -t dev --profile "$PROFILE"
 
+# Create the Unity AI Gateway model-service now that the UC schema exists (bundle deploy
+# created it). Idempotent — skips if it already exists.
+echo "==> Creating Unity AI Gateway model-service..."
+"$HERE/create_gateway.sh"
+
 # workspace files root where the bundle uploaded source
 EMAIL=$(databricks current-user me --profile "$PROFILE" -o json | python3 -c "import json,sys;print(json.load(sys.stdin)['userName'])")
 SRC="/Workspace/Users/${EMAIL}/.bundle/sentiva-rag/dev/files/src"
