@@ -7,7 +7,7 @@ env:
   - name: EMBEDDING_ENDPOINT
     value: "databricks-qwen3-embedding-0-6b"
   - name: LAKEBASE_ENDPOINT
-    value: "projects/sentiva-rag/branches/production/endpoints/primary"
+    value: "projects/sentiva-rag-0c2e7e/branches/production/endpoints/primary"
   - name: K
     value: "5"
   # MLflow 3 GenAI tracing stored in OpenTelemetry format IN Unity Catalog.

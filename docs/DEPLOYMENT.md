@@ -35,6 +35,10 @@ These are manual checkpoints during deployment; `scripts/preflight.sh` verifies 
 
 ## 2. Deploy (in order; includes 2 manual UI checkpoints)
 
+> Run these in one shell. If you open a new terminal partway through, `source config.env`
+> again first — the raw `databricks ... --profile "$PROFILE"` commands rely on `$PROFILE`
+> being set (otherwise the CLI falls back to another profile and auth fails).
+
 ```bash
 source config.env
 
@@ -59,7 +63,7 @@ source config.env
 ./scripts/deploy.sh
 
 # STAGE 5 — run the ingestion pipeline (generate → load → chunk → embed → Lakebase + indexes)
-./scripts/run_ingest.sh
+databricks bundle run sentiva_ingest -t dev --profile "$PROFILE"
 ```
 
 > **Important details (already handled by the scripts/config — listed for understanding)**
