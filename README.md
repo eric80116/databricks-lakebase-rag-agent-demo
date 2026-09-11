@@ -24,9 +24,8 @@ flowchart LR
     docs --> parse --> delta --> embed
   end
 
-  kb[("Lakebase Search<br/>kb.documents<br/>lakebase_ann + bm25")]
-  mem[("Lakebase<br/>mem.chat_history")]
-  embed --> kb
+  lakebase[("Lakebase · one Postgres project<br/>• kb.documents — Lakebase Search (lakebase_ann + bm25)<br/>• mem.chat_history — agent memory")]
+  embed --> lakebase
 
   subgraph Serve["② Serving"]
     direction TB
@@ -37,8 +36,8 @@ flowchart LR
     appA -->|LLM| gw
   end
 
-  appA -->|hybrid retrieval| kb
-  appA -->|read/write memory| mem
+  appA -->|hybrid retrieval| lakebase
+  appA -->|read/write memory| lakebase
 
   subgraph Obs["③ Observability (Unity Catalog)"]
     direction TB
