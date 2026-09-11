@@ -39,10 +39,6 @@ try:
     except Exception as e:
         log.warning("UC trace_location bind failed (%s); using plain experiment", e)
         mlflow.set_experiment(_exp)
-    try:
-        mlflow.langchain.autolog()
-    except Exception as e:
-        log.warning("langchain autolog unavailable: %s", e)
     _mlflow = mlflow
     log.info("MLflow tracing enabled")
 except Exception as e:

@@ -30,7 +30,7 @@ flowchart LR
   subgraph Serve["② Serving"]
     direction TB
     web["Product web / App B (React UI)"]
-    appA["App A · FastAPI + LangChain"]
+    appA["App A · FastAPI + ResponsesAgent"]
     gw["Unity AI Gateway<br/>→ Gemini flash"]
     web -->|POST /api/chat| appA
     appA -->|LLM| gw
@@ -55,7 +55,7 @@ flowchart LR
 
 | Area | Detail |
 |---|---|
-| **Agent** | LangChain + FastAPI, deployed as a Databricks App, with per-request MLflow tracing |
+| **Agent** | MLflow `ResponsesAgent` + FastAPI, deployed as a Databricks App, with per-request MLflow tracing |
 | **Knowledge base** | **Lakebase Search** — `lakebase_vector` (ANN) + `lakebase_text` (BM25) hybrid retrieval |
 | **Memory** | Lakebase (Postgres) chat history; multi-turn context |
 | **Ingestion job** | generate → load JSON → `ai_parse_document` (PDF OCR) → `ai_prep_search` chunking → embed → Lakebase + build indexes |
@@ -99,7 +99,7 @@ databricks.yml            DAB bundle (jobs / apps / dashboard / schema / volume)
 config.env.example        the single per-environment config (copy to config.env)
 resources/                DAB resource definitions
 scripts/                  preflight, bootstrap, deploy, grants, teardown, test_all
-src/app_agent/            App A — LangChain + FastAPI agent
+src/app_agent/            App A — MLflow ResponsesAgent + FastAPI
 src/app_ui/               App B — React UI + FastAPI proxy
 src/jobs/ + src/data_gen/ ingestion pipeline + synthetic multilingual doc generators
 dashboards/               AI/BI dashboard definition
