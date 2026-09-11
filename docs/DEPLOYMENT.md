@@ -85,7 +85,42 @@ BUNDLE_VAR_warehouse_id="$WAREHOUSE_ID" databricks bundle run sentiva_ingest -t 
 
 ---
 
-## 4. Teardown (avoid surprise cost)
+## 4. Swapping the LLM (and model-compatibility risks)
+
+The agent is model-agnostic — it always calls the gateway model-service `sentiva_llm`; the
+actual model is that service's routing **destination**, set by `LLM_ENDPOINT`. To switch:
+
+```bash
+# 1. FIRST check the candidate can actually drive the tool-calling agent:
+./scripts/test_model.sh databricks-claude-opus-4-8 databricks-glm-5-3-flash
+
+# 2. Set it in config.env  ->  export LLM_ENDPOINT="databricks-claude-opus-4-8"
+source config.env
+# 3. Recreate the gateway (routing can't be updated in place, so this deletes + recreates
+#    the model-service and drops the old inference table):
+./scripts/create_gateway.sh          # or re-run ./scripts/deploy.sh
+```
+No agent/app code changes.
+
+### ⚠️ Not every model works for a tool-calling agent
+`scripts/test_model.sh` exists because behavior varies. Verified (2026-09):
+
+| Model | Tool-calling via the gateway |
+|---|---|
+| `deepseek-v4-flash` (default), Claude Opus/Sonnet, `glm-5-3-flash` | ✅ works |
+| Gemini 2.5/3.x | ❌ reasoning model — `thought_signature` dropped on tool calls (HTTP 400) |
+| GPT-5.6 (luna/sol/terra) | ❌ reasoning model — tools + `reasoning_effort` unsupported on chat/completions |
+
+Other risks the probe catches:
+- **`temperature`**: some models (Claude Opus, GPT-5.x) reject it. The agent omits `temperature` by default; set env `TEMPERATURE` only for a model that supports it.
+- **Destination name**: `system.ai.<endpoint>` must exist (e.g. a Llama endpoint's foundation-model name may differ) or gateway create fails.
+- **Propagation**: after a swap the new routing takes a short while to take effect.
+
+Rule of thumb: pick a **non-reasoning, tool-calling-capable** model (deepseek / Claude / GLM). Reasoning models (Gemini 2.5/3.x, GPT-5.6, o-series) don't tool-call cleanly through the unified gateway.
+
+---
+
+## 5. Teardown (avoid surprise cost)
 ```bash
 ./scripts/teardown.sh                 # reads config.env; keeps the catalog
 ./scripts/teardown.sh --drop-catalog  # also drop the catalog

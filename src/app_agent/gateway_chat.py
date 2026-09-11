@@ -20,11 +20,18 @@ from databricks_langchain import ChatDatabricks
 GATEWAY_SERVICE = os.getenv("GATEWAY_SERVICE", "dbx_agent_lakebase.rag.sentiva_llm")
 
 
-def build_llm(temperature: float = 0.2, max_tokens: int = 1024):
+def build_llm(max_tokens: int = 1024):
+    # `temperature` is deliberately NOT sent: several models (e.g. Claude Opus, GPT-5.x)
+    # reject it, and omitting it maximizes model-swap compatibility. Set TEMPERATURE in
+    # the env to opt back in for a model that supports it.
+    kwargs = {}
+    temp = os.getenv("TEMPERATURE")
+    if temp:
+        kwargs["temperature"] = float(temp)
     return ChatDatabricks(
         workspace_client=WorkspaceClient(),  # app SP creds auto-injected at runtime
         model=GATEWAY_SERVICE,
         use_ai_gateway=True,
-        temperature=temperature,
         max_tokens=max_tokens,
+        **kwargs,
     )

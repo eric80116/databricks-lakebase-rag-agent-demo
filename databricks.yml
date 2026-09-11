@@ -7,11 +7,16 @@ bundle:
 include:
   - resources/*.yml
 
-# The built React frontend (src/app_ui/frontend/dist) is .gitignored, and bundle
-# sync honors .gitignore — so force-include it, or App B serves "Frontend not built".
+# These are .gitignored (built/rendered artifacts) but MUST reach the workspace — bundle
+# sync honors .gitignore, so force-include them:
+#  - the built React frontend, else App B serves "Frontend not built"
+#  - the rendered app.yaml files (from app.yaml.tmpl via deploy.sh), else the apps start
+#    with a wrong default command / stale env and crash
 sync:
   include:
     - src/app_ui/frontend/dist/**
+    - src/app_agent/app.yaml
+    - src/app_ui/app.yaml
 
 variables:
   catalog:

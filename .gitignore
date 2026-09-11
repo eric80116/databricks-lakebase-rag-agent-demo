@@ -40,3 +40,7 @@ src/app_ui/frontend/vite.config.d.ts
 # local mlflow test artifacts
 mlflow.db
 mlruns/
+
+# rendered from app.yaml.tmpl by scripts/deploy.sh (env-specific — do not track)
+src/app_agent/app.yaml
+src/app_ui/app.yaml
