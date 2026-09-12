@@ -162,40 +162,36 @@ async def chat(request: Request):
         )
 
     try:
-        headers = {"Content-Type": "application/json"}
-        # Prefer forwarding the logged-in user's token — App A is user-OAuth gated and
-        # the user already has access to it. Databricks injects this header in the app.
-        user_token = request.headers.get("x-forwarded-access-token")
-        if user_token:
-            headers["Authorization"] = f"Bearer {user_token}"
-        else:
-            # Fallback: service-principal auth (authenticate() returns a header dict).
-            try:
-                from databricks.sdk.core import Config
-                headers.update(Config().authenticate())
-            except Exception as e:
-                print(f"Warning: Could not get Databricks token: {e}")
-
-        # Proxy the request to the agent API
-        response = await http_client.post(
-            f"{AGENT_API_URL}/api/chat",
-            json={"session_id": session_id, "message": message},
-            headers=headers,
-        )
-
-        if response.status_code != 200:
-            error_detail = response.text
-            try:
-                error_data = response.json()
-                error_detail = error_data.get("detail", error_detail)
-            except:
-                pass
-            return JSONResponse(
-                {"detail": f"Agent API error: {error_detail}"},
-                status_code=response.status_code,
-            )
-
-        return response.json()
+        # App A is now an MLflow AgentServer: call the standard /responses (streaming)
+        # endpoint and aggregate it back into our {answer, sources, timings} shape.
+        headers = _agent_headers(request)
+        payload = {
+            "input": [{"role": "user", "content": message}],
+            "custom_inputs": {"session_id": session_id},
+            "stream": True,
+        }
+        answer, sources, timings = "", [], {}
+        async with http_client.stream(
+            "POST", f"{AGENT_API_URL}/responses", json=payload, headers=headers
+        ) as resp:
+            if resp.status_code != 200:
+                detail = (await resp.aread()).decode(errors="replace")
+                return JSONResponse({"detail": f"Agent API error: {detail[:300]}"},
+                                    status_code=resp.status_code)
+            async for line in resp.aiter_lines():
+                line = line.strip()
+                if not line.startswith("data:"):
+                    continue
+                try:
+                    ev = json.loads(line[5:].strip())
+                except Exception:
+                    continue
+                if ev.get("type") == "response.output_text.delta":
+                    answer += ev.get("delta", "")
+                elif ev.get("custom_outputs"):
+                    co = ev["custom_outputs"]
+                    sources, timings = co.get("sources", []), co.get("timings", {})
+        return {"answer": answer, "sources": sources, "timings": timings, "trace_id": ""}
 
     except httpx.TimeoutException:
         return JSONResponse(
@@ -252,22 +248,38 @@ async def chat_stream(request: Request):
         return StreamingResponse(mockgen(), media_type="text/event-stream")
 
     headers = _agent_headers(request)
+    payload = {
+        "input": [{"role": "user", "content": message}],
+        "custom_inputs": {"session_id": session_id},
+        "stream": True,
+    }
 
     async def gen():
+        # Translate App A's AgentServer /responses SSE into the UI's {type:token}/{type:done}.
         try:
             async with http_client.stream(
-                "POST", f"{AGENT_API_URL}/api/chat/stream",
-                json={"session_id": session_id, "message": message}, headers=headers,
+                "POST", f"{AGENT_API_URL}/responses", json=payload, headers=headers,
             ) as resp:
                 if resp.status_code != 200:
                     text = (await resp.aread()).decode(errors="replace")
                     yield f"data: {json.dumps({'type':'error','error': f'Agent API {resp.status_code}: {text[:200]}'})}\n\n"
                     return
                 async for line in resp.aiter_lines():
-                    if line:
-                        yield line + "\n"
-                    else:
-                        yield "\n"  # preserve SSE event boundaries
+                    line = line.strip()
+                    if not line.startswith("data:"):
+                        continue
+                    try:
+                        ev = json.loads(line[5:].strip())
+                    except Exception:
+                        continue
+                    tp = ev.get("type")
+                    if tp == "response.output_text.delta":
+                        yield f"data: {json.dumps({'type':'token','text': ev.get('delta','')})}\n\n"
+                    elif ev.get("custom_outputs"):
+                        co = ev["custom_outputs"]
+                        yield f"data: {json.dumps({'type':'done','sources': co.get('sources',[]),'timings': co.get('timings',{}),'trace_id': ev.get('trace_id','')})}\n\n"
+                    elif tp == "error" or ev.get("error"):
+                        yield f"data: {json.dumps({'type':'error','error': ev.get('error','agent error')})}\n\n"
         except httpx.TimeoutException:
             yield f"data: {json.dumps({'type':'error','error':'Request to agent API timed out'})}\n\n"
         except Exception as e:

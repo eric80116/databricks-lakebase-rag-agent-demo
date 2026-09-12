@@ -30,6 +30,19 @@ def _get_code(url, token, timeout=30):
         return e.code
 
 
+def _invoke(app_a_url, token, session_id, message, timeout=120):
+    """Call App A's MLflow AgentServer /invocations and return (answer, sources, timings)."""
+    body = {"input": [{"role": "user", "content": message}], "custom_inputs": {"session_id": session_id}}
+    d = _post_json(f"{app_a_url}/invocations", token, body, timeout=timeout)
+    answer = ""
+    for item in d.get("output", []):
+        for part in (item.get("content") or []) if isinstance(item, dict) else []:
+            if isinstance(part, dict) and part.get("type") == "output_text":
+                answer += part.get("text", "")
+    co = d.get("custom_outputs") or {}
+    return answer, co.get("sources", []), co.get("timings", {})
+
+
 # ---- #8 embedding model ----------------------------------------------------
 def test_embedding_endpoint_1024(host, token, profile):
     r = _post_json(f"{host}/serving-endpoints/{CFG.get('EMBEDDING_ENDPOINT','databricks-qwen3-embedding-0-6b')}/invocations",
@@ -67,7 +80,7 @@ def test_lakebase_kb_loaded(profile):
 
 # ---- #2/#11 apps healthy ---------------------------------------------------
 def test_app_a_health(token, profile):
-    assert _get_code(f"{app_url(APP_A, profile)}/api/health", token) == 200
+    assert _get_code(f"{app_url(APP_A, profile)}/health", token) == 200
 
 
 def test_app_b_serves(token, profile):
@@ -76,20 +89,20 @@ def test_app_b_serves(token, profile):
 
 # ---- #2 end-to-end agent (retrieval + LLM + grounding) ---------------------
 def test_agent_chat_grounded(token, profile):
-    url = f"{app_url(APP_A, profile)}/api/chat"
-    r = _post_json(url, token, {"session_id": "pytest", "message": "How much does Sentiva Shield cost?"})
-    assert r.get("answer"), "empty answer"
-    assert len(r.get("sources", [])) > 0, "no sources retrieved"
-    assert r.get("timings", {}).get("total_ms", 0) > 0
+    app_a = app_url(APP_A, profile)
+    answer, sources, timings = _invoke(app_a, token, "pytest", "How much does Sentiva Shield cost?")
+    assert answer, "empty answer"
+    assert len(sources) > 0, "no sources retrieved"
+    assert timings.get("total_ms", 0) > 0
 
 
 # ---- #4 multi-turn memory --------------------------------------------------
 def test_agent_memory_multiturn(token, profile):
-    url = f"{app_url(APP_A, profile)}/api/chat"
+    app_a = app_url(APP_A, profile)
     sid = "pytest-mem"
-    _post_json(url, token, {"session_id": sid, "message": "How much does Sentiva Shield cost?"})
-    r2 = _post_json(url, token, {"session_id": sid, "message": "Which of those plans includes a VPN?"})
-    assert r2.get("answer"), "follow-up empty"
+    _invoke(app_a, token, sid, "How much does Sentiva Shield cost?")
+    answer, _, _ = _invoke(app_a, token, sid, "Which of those plans includes a VPN?")
+    assert answer, "follow-up empty"
 
 
 # ---- #3 OTel traces in UC --------------------------------------------------

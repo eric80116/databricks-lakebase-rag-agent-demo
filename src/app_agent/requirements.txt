@@ -1,14 +1,14 @@
-# App A — Sentiva RAG agent API. FastAPI/uvicorn are pre-installed on Databricks Apps
-# but we pin the extras the agent needs.
-fastapi
+# App A — Sentiva agent served by MLflow AgentServer (databricks-agents).
+# Dependency FLOORS mirror the official databricks agent-langgraph template (a known-good
+# set): langgraph>=1.1.0 avoids the 1.0.x langgraph-prebuilt/runtime mismatch, and NOT
+# pinning `langchain` lets pip pick a version compatible with langgraph>=1.1 (pinning
+# langchain==1.2.10 forced langgraph<1.1.0 -> ResolutionImpossible on the py3.11 runtime).
 uvicorn[standard]
+databricks-agents>=1.9.3
+mlflow>=3.10.0
+langgraph>=1.1.0
+langchain-mcp-adapters>=0.2.1
+databricks-langchain>=0.17.0
 psycopg[binary]
 databricks-sdk>=0.81.0
-mlflow>=3.14.0
 requests
-pydantic>=2.0
-# Tool-calling agent via the Databricks-recommended ChatDatabricks client (see gateway_chat.py).
-databricks-langchain==0.20.0
-langgraph==1.2.11
-langgraph-prebuilt==1.1.0
-mcp==1.29.1

@@ -29,12 +29,13 @@ TOKEN=$(databricks auth token --profile "$PROFILE" -o json 2>/dev/null \
 
 echo "==> Warming up App A to create the trace tables (lazy on first trace)..."
 for i in 1 2 3 4 5 6 7 8 9 10; do
-  code=$(curl -s -o /dev/null -w '%{http_code}' -m 20 -H "Authorization: Bearer $TOKEN" "$URL/api/health" 2>/dev/null || echo 000)
+  code=$(curl -s -o /dev/null -w '%{http_code}' -m 20 -H "Authorization: Bearer $TOKEN" "$URL/health" 2>/dev/null || echo 000)
   [ "$code" = "200" ] && break
   sleep 5
 done
 curl -s -m 60 -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
-  -d '{"session_id":"warmup-trace","message":"warm up"}' "$URL/api/chat" >/dev/null 2>&1 || true
+  -d '{"input":[{"role":"user","content":"warm up"}],"custom_inputs":{"session_id":"warmup-trace"}}' \
+  "$URL/invocations" >/dev/null 2>&1 || true
 
 echo "==> Waiting for span export to flush + tables to appear..."
 FOUND=""

@@ -7,9 +7,14 @@ is a tool that retrieves from Lakebase (hybrid vector + keyword); the LLM is cal
 request is traced with MLflow (autolog + an explicit `retrieval` span). The model is chosen
 at the gateway (routing destination), so the agent is model-agnostic — see `gateway_chat.py`.
 
-## Endpoints
-- `GET /api/health` → `{"status":"ok"}`
-- `POST /api/chat` `{session_id, message}` → `{answer, sources[], timings{retrieval_ms,llm_ms,total_ms}, trace_id}`
+## Endpoints (served by MLflow AgentServer)
+- `GET /health`
+- `POST /responses` — OpenAI Responses API (streaming SSE + non-streaming). Request:
+  `{input:[{role,content}], custom_inputs:{session_id}, stream}`. Retrieval `sources` +
+  per-step `timings` ride in `custom_outputs` (a `response.custom_outputs` stream event, or
+  the response's `custom_outputs` field).
+- `POST /invocations` — MLflow serving convention (non-streaming).
+- `GET /agent/info`, `GET /docs`.
 
 ## Env vars (set in app.yaml / app resources)
 | Var | Purpose | Default |
