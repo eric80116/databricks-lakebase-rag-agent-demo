@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sentiva RAG Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#faf8f5; --surface:#ffffff; --surface-2:#f4efe8; --panel:#f9f5ef;
+  --ink:#1a1c22; --muted:#6d685f; --faint:#928b7e; --line:#e7dfd3; --line-2:#d9cfc0;
+  --accent:#d9432a; --accent-ink:#a5301c; --accent-soft:#fbe8e2;
+  --data:#0f6f7a; --data-soft:#dceef0;
+  --good:#2f7d4f; --good-soft:#e0f0e4; --warn:#a9741a; --warn-soft:#f6ecd6;
+  --shadow:0 1px 2px rgba(26,28,34,.04),0 4px 16px rgba(26,28,34,.06);
+  --radius:10px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#131418; --surface:#1b1d24; --surface-2:#23262f; --panel:#1e2027;
+  --ink:#ece8e1; --muted:#a49c8f; --faint:#7d766a; --line:#2c2f39; --line-2:#3a3e4a;
+  --accent:#ff6a4d; --accent-ink:#ff8a72; --accent-soft:#3a201b;
+  --data:#41b7c5; --data-soft:#123138;
+  --good:#6dd39b; --good-soft:#16302270; --warn:#e0b25a; --warn-soft:#332a12;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.35);
+}}
+:root[data-theme="dark"]{
+  --ground:#131418; --surface:#1b1d24; --surface-2:#23262f; --panel:#1e2027;
+  --ink:#ece8e1; --muted:#a49c8f; --faint:#7d766a; --line:#2c2f39; --line-2:#3a3e4a;
+  --accent:#ff6a4d; --accent-ink:#ff8a72; --accent-soft:#3a201b;
+  --data:#41b7c5; --data-soft:#123138;
+  --good:#6dd39b; --good-soft:#16302270; --warn:#e0b25a; --warn-soft:#332a12;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1160px; margin:0 auto; padding:0 24px;
+  display:grid; grid-template-columns:248px minmax(0,1fr); gap:56px; align-items:start;}
+@media (max-width:900px){.wrap{grid-template-columns:1fr; gap:0}}
+
+/* ---- masthead ---- */
+header.top{grid-column:1/-1; padding:64px 0 40px; border-bottom:1px solid var(--line);}
+.eyebrow{font-family:"IBM Plex Mono",monospace; font-size:12.5px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--accent-ink); margin:0 0 14px;}
+h1{font-family:"Archivo",sans-serif; font-weight:800; font-size:clamp(34px,5vw,54px);
+  line-height:1.02; letter-spacing:-.02em; margin:0; text-wrap:balance;}
+.lede{font-size:19px; color:var(--muted); max-width:60ch; margin:18px 0 0; line-height:1.5;}
+.chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:26px;}
+.chip{font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.02em;
+  padding:5px 11px; border-radius:999px; border:1px solid var(--line-2);
+  background:var(--surface); color:var(--muted); white-space:nowrap;}
+.chip b{color:var(--ink); font-weight:500;}
+
+/* ---- sidebar TOC ---- */
+nav.toc{position:sticky; top:24px; padding-top:44px; align-self:start;}
+@media (max-width:900px){nav.toc{position:static; padding:24px 0; border-bottom:1px solid var(--line);}}
+nav.toc .lbl{font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--faint); margin:0 0 14px;}
+nav.toc ol{list-style:none; margin:0; padding:0; counter-reset:s;}
+nav.toc li{counter-increment:s; margin:0;}
+nav.toc a{display:grid; grid-template-columns:26px 1fr; gap:6px; align-items:baseline;
+  padding:7px 0; color:var(--muted); text-decoration:none; font-size:14.5px; line-height:1.3;
+  border-bottom:1px solid transparent;}
+nav.toc a::before{content:counter(s,decimal-leading-zero); font-family:"IBM Plex Mono",monospace;
+  font-size:12px; color:var(--faint);}
+nav.toc a:hover{color:var(--accent-ink);}
+nav.toc a:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:3px;}
+
+/* ---- content ---- */
+main{padding:44px 0 96px; min-width:0;}
+section{padding:40px 0; border-top:1px solid var(--line);}
+section:first-of-type{border-top:0; padding-top:12px;}
+.sec-num{font-family:"IBM Plex Mono",monospace; font-size:13px; color:var(--accent-ink); letter-spacing:.06em;}
+h2{font-family:"Archivo",sans-serif; font-weight:700; font-size:29px; letter-spacing:-.015em;
+  margin:6px 0 8px; line-height:1.1; text-wrap:balance;}
+h3{font-family:"Archivo",sans-serif; font-weight:600; font-size:18.5px; letter-spacing:-.01em;
+  margin:34px 0 8px;}
+p{margin:0 0 14px; max-width:68ch;}
+main ul,main ol{max-width:68ch; padding-left:22px; margin:0 0 16px;}
+main li{margin:6px 0;}
+strong{font-weight:600;}
+.muted{color:var(--muted);}
+code,.mono{font-family:"IBM Plex Mono",monospace; font-size:.86em;}
+p code,li code,td code{background:var(--surface-2); border:1px solid var(--line);
+  padding:1px 6px; border-radius:5px; color:var(--accent-ink); white-space:nowrap;}
+a.ext{color:var(--accent-ink);}
+
+/* callout */
+.note{background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--data);
+  border-radius:8px; padding:14px 18px; margin:20px 0; font-size:14.7px; color:var(--muted); max-width:68ch;}
+.note b{color:var(--ink); font-weight:600;}
+.note.accent{border-left-color:var(--accent);}
+
+/* ---- at-a-glance planes ---- */
+.stage{display:flex; flex-direction:column; gap:14px; margin:8px 0 4px;}
+.plane{border:1px solid var(--line); border-radius:var(--radius); background:var(--surface); overflow:hidden;}
+.plane > .phead{display:flex; align-items:center; gap:10px; padding:11px 16px;
+  border-bottom:1px solid var(--line); background:var(--surface-2);}
+.plane .dot{width:9px; height:9px; border-radius:50%; flex:none;}
+.plane .ptitle{font-family:"Archivo",sans-serif; font-weight:700; font-size:14.5px;}
+.plane .ptag{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--faint); margin-left:auto;}
+.plane .pbody{display:flex; flex-wrap:wrap; gap:10px; padding:16px;}
+.box{flex:1 1 150px; min-width:140px; border:1px solid var(--line-2); border-radius:8px;
+  padding:11px 13px; background:var(--ground);}
+.box .bt{font-weight:600; font-size:14px; line-height:1.25;}
+.box .bs{font-size:12.5px; color:var(--muted); margin-top:3px; line-height:1.35;}
+.box .bmono{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--faint); margin-top:6px; word-break:break-word;}
+.stores{display:flex; gap:14px; flex-wrap:wrap;}
+.store{flex:1 1 240px; border:1px dashed var(--line-2); border-radius:var(--radius);
+  background:var(--data-soft); padding:14px 16px;}
+.store .st{font-family:"Archivo",sans-serif; font-weight:700; font-size:14.5px; color:var(--ink);
+  display:flex; align-items:center; gap:8px;}
+.store .st::before{content:""; width:9px; height:9px; border-radius:2px; background:var(--data);}
+.store ul{margin:8px 0 0; padding-left:18px; max-width:none;}
+.store li{font-size:13px; color:var(--muted); margin:3px 0;}
+.store li b{color:var(--ink); font-weight:500;}
+
+/* ---- numbered flow steps ---- */
+.flow{display:flex; flex-direction:column; gap:0; margin:14px 0; counter-reset:f;}
+.step{counter-increment:f; display:grid; grid-template-columns:40px 1fr; gap:16px; padding:14px 0;
+  border-bottom:1px solid var(--line); align-items:start;}
+.step:last-child{border-bottom:0;}
+.step .sn{width:34px; height:34px; border-radius:50%; display:grid; place-items:center;
+  font-family:"IBM Plex Mono",monospace; font-size:14px; font-weight:500; color:var(--accent-ink);
+  background:var(--accent-soft); border:1px solid var(--line-2);}
+.step .sn::before{content:counter(f);}
+.step .sh{font-family:"Archivo",sans-serif; font-weight:600; font-size:16px; margin:4px 0 3px;}
+.step .sb{font-size:14.5px; color:var(--muted); margin:0; max-width:64ch;}
+.step .sb code{white-space:normal;}
+.tags{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;}
+.tag{font-family:"IBM Plex Mono",monospace; font-size:11px; padding:2px 8px; border-radius:5px;
+  border:1px solid var(--line-2); background:var(--surface); color:var(--muted);}
+.tag.d{color:var(--data); border-color:var(--data); background:var(--data-soft);}
+.tag.a{color:var(--accent-ink); border-color:var(--line-2); background:var(--accent-soft);}
+
+/* ---- tables ---- */
+.tablewrap{overflow-x:auto; margin:16px 0; border:1px solid var(--line); border-radius:var(--radius);}
+table{border-collapse:collapse; width:100%; font-size:14px; min-width:520px;}
+th,td{text-align:left; padding:11px 15px; border-bottom:1px solid var(--line); vertical-align:top;}
+thead th{background:var(--surface-2); font-family:"Archivo",sans-serif; font-weight:600; font-size:12.5px;
+  letter-spacing:.03em; text-transform:uppercase; color:var(--muted); white-space:nowrap;}
+tbody tr:last-child td{border-bottom:0;}
+tbody tr:hover{background:var(--panel);}
+td .rq{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--accent-ink); font-weight:500;}
+td code{font-size:12.5px;}
+.ok{display:inline-block; font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--good);
+  background:var(--good-soft); border:1px solid var(--good); border-radius:5px; padding:1px 7px;}
+
+/* code block */
+pre{background:var(--surface-2); border:1px solid var(--line); border-radius:8px; padding:14px 16px;
+  overflow-x:auto; margin:14px 0; font-family:"IBM Plex Mono",monospace; font-size:13px; line-height:1.6; color:var(--ink);}
+pre .c{color:var(--faint);}
+
+footer{grid-column:1/-1; border-top:1px solid var(--line); padding:26px 0 60px; color:var(--faint);
+  font-size:13px; font-family:"IBM Plex Mono",monospace;}
+footer b{color:var(--muted); font-weight:500;}
+.two{display:grid; grid-template-columns:1fr 1fr; gap:26px;}
+@media (max-width:680px){.two{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">Solution Architecture · Databricks reference</p>
+  <h1>Sentiva RAG Agent on Databricks</h1>
+  <p class="lede">A deployable Retrieval-Augmented-Generation agent that answers a consumer
+  digital-safety brand's product questions in four languages — and the Databricks components
+  behind every part of it.</p>
+  <div class="chips">
+    <span class="chip"><b>Brand:</b> Sentiva (fictional)</span>
+    <span class="chip"><b>Languages:</b> EN · JA · FR · DE</span>
+    <span class="chip"><b>Deploy:</b> Asset Bundles</span>
+    <span class="chip"><b>Serving:</b> MLflow AgentServer</span>
+    <span class="chip"><b>KB:</b> Lakebase Search</span>
+    <span class="chip"><b>LLM:</b> Unity AI Gateway</span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Contents">
+  <p class="lbl">Read in order</p>
+  <ol>
+    <li><a href="#overview">Overview &amp; mental model</a></li>
+    <li><a href="#blocks">The building blocks</a></li>
+    <li><a href="#ingest">Flow 1 — Building the knowledge base</a></li>
+    <li><a href="#serve">Flow 2 — Answering a question</a></li>
+    <li><a href="#depth">Key components, in depth</a></li>
+    <li><a href="#requirements">Requirements → implementation</a></li>
+    <li><a href="#lifecycle">Deploy, configure, tear down</a></li>
+    <li><a href="#decisions">Design decisions &amp; trade-offs</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- 1 -->
+<section id="overview">
+  <span class="sec-num">01</span>
+  <h2>Overview &amp; mental model</h2>
+  <p>Sentiva is a fictional consumer digital-safety brand (products: <em>Shield, Alert,
+  Family, ID, Scan</em>). This solution gives Sentiva's product website a single HTTP endpoint
+  it can call to answer end-customer questions — in the customer's own language — grounded in
+  Sentiva's real documentation rather than the model's imagination.</p>
+
+  <p>The whole system is best understood as <strong>two flows that meet at one shared store</strong>:</p>
+  <ul>
+    <li><strong>Flow 1 — offline ingestion (built once, refreshed on demand):</strong> raw
+    documents become a searchable knowledge base in Lakebase.</li>
+    <li><strong>Flow 2 — online serving (runs on every question):</strong> the agent retrieves
+    from that knowledge base and composes an answer.</li>
+  </ul>
+  <p>The store where they meet is <strong>Lakebase</strong> (a serverless Postgres). Everything
+  else — Unity Catalog, the Apps, the AI Gateway, the tracing tables — hangs off these two flows.</p>
+
+  <h3>At a glance</h3>
+  <p class="muted">Three planes of work, over two shared stores. Read top to bottom: documents
+  come in on the left, questions are answered in the middle, and everything is observed on the right.</p>
+
+  <div class="stage">
+    <div class="plane">
+      <div class="phead"><span class="dot" style="background:var(--data)"></span>
+        <span class="ptitle">① Ingestion &nbsp;— offline job</span><span class="ptag">sentiva_ingest</span></div>
+      <div class="pbody">
+        <div class="box"><div class="bt">Raw documents</div><div class="bs">Multilingual JSON + PDFs</div><div class="bmono">UC Volume · raw_docs</div></div>
+        <div class="box"><div class="bt">Parse &amp; chunk</div><div class="bs">OCR + smart chunking</div><div class="bmono">ai_parse_document · ai_prep_search</div></div>
+        <div class="box"><div class="bt">Embed</div><div class="bs">Text → 1024-d vectors</div><div class="bmono">Qwen3-Embedding-0.6B</div></div>
+      </div>
+    </div>
+    <div class="plane">
+      <div class="phead"><span class="dot" style="background:var(--accent)"></span>
+        <span class="ptitle">② Serving &nbsp;— online agent</span><span class="ptag">App A + App B</span></div>
+      <div class="pbody">
+        <div class="box"><div class="bt">Product web / UI</div><div class="bs">React simulator</div><div class="bmono">App B · sentiva-web</div></div>
+        <div class="box"><div class="bt">Agent API</div><div class="bs">Tool-calling RAG agent</div><div class="bmono">App A · MLflow AgentServer</div></div>
+        <div class="box"><div class="bt">LLM</div><div class="bs">Routed &amp; metered</div><div class="bmono">Unity AI Gateway → deepseek</div></div>
+      </div>
+    </div>
+    <div class="plane">
+      <div class="phead"><span class="dot" style="background:var(--good)"></span>
+        <span class="ptitle">③ Observability &nbsp;— Unity Catalog</span><span class="ptag">traces + payloads</span></div>
+      <div class="pbody">
+        <div class="box"><div class="bt">Agent traces</div><div class="bs">OpenTelemetry spans</div><div class="bmono">MLflow → *_otel_spans</div></div>
+        <div class="box"><div class="bt">LLM payloads</div><div class="bs">Usage + request/response</div><div class="bmono">Gateway → llm_inference_payload</div></div>
+        <div class="box"><div class="bt">Dashboard</div><div class="bs">Latency &amp; volume</div><div class="bmono">AI/BI · sentiva_agent_perf</div></div>
+      </div>
+    </div>
+
+    <div class="stores">
+      <div class="store"><div class="st">Lakebase — serverless Postgres</div>
+        <ul>
+          <li><b>kb.documents</b> — the knowledge base (Lakebase Search: vector + keyword)</li>
+          <li><b>mem.chat_history</b> — the agent's conversation memory</li>
+        </ul></div>
+      <div class="store" style="background:var(--surface-2); border-style:solid;"><div class="st" style="color:var(--ink)">Unity Catalog — <span class="mono" style="font-weight:400">dbx_agent_lakebase.rag</span></div>
+        <ul>
+          <li><b>Volume</b> raw_docs · <b>Delta</b> docs_json / docs_chunks / docs_parsed</li>
+          <li><b>Inference table</b> + <b>MLflow OTel</b> trace tables</li>
+        </ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 -->
+<section id="blocks">
+  <span class="sec-num">02</span>
+  <h2>The building blocks</h2>
+  <p>Before the flows, here is the vocabulary — every component, what it is, and where it lives.
+  Keep this as a reference; the next two sections show how they connect.</p>
+
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Component</th><th>What it is</th><th>Where it lives</th></tr></thead>
+    <tbody>
+      <tr><td><b>UC Volume</b> <code>raw_docs</code></td><td>Landing zone for the raw source documents (48 multilingual JSON files + 3 PDFs).</td><td>Unity Catalog</td></tr>
+      <tr><td><b>Delta tables</b></td><td><code>docs_json</code> (loaded JSON), <code>docs_parsed</code> (OCR'd PDFs), <code>docs_chunks</code> (both, chunked).</td><td>Unity Catalog</td></tr>
+      <tr><td><b>ai_parse_document()</b></td><td>SQL AI function — OCR &amp; layout parsing of PDFs into structured text.</td><td>Serverless SQL warehouse</td></tr>
+      <tr><td><b>ai_prep_search()</b></td><td>SQL AI function — splits a document into retrieval chunks (a version to embed + a version to return).</td><td>Serverless SQL warehouse</td></tr>
+      <tr><td><b>Qwen3-Embedding-0.6B</b></td><td>Embedding model — turns chunk text into 1024-dimension vectors.</td><td>Model serving endpoint</td></tr>
+      <tr><td><b>Lakebase</b> <code>kb.documents</code></td><td>The knowledge base. One row per chunk, with a vector + a keyword index — <b>Lakebase Search</b>.</td><td>Lakebase (Postgres)</td></tr>
+      <tr><td><b>Lakebase</b> <code>mem.chat_history</code></td><td>Per-session conversation memory, keyed by <code>session_id</code>.</td><td>Lakebase (Postgres)</td></tr>
+      <tr><td><b>Unity AI Gateway</b></td><td>A model-service that fronts the LLM: routing, usage metering, and payload logging.</td><td>Unity Catalog govern.</td></tr>
+      <tr><td><b>The agent</b></td><td>A LangGraph <code>create_react_agent</code> with one tool (knowledge-base search), served through MLflow AgentServer.</td><td>App A</td></tr>
+      <tr><td><b>App A</b> <code>sentiva-agent-api</code></td><td>MLflow AgentServer — the FastAPI serving layer exposing <code>/responses</code>.</td><td>Databricks App</td></tr>
+      <tr><td><b>App B</b> <code>sentiva-web</code></td><td>React UI simulating Sentiva's product website; proxies to App A.</td><td>Databricks App</td></tr>
+      <tr><td><b>MLflow tracing</b></td><td>Per-request spans stored in OpenTelemetry format inside Unity Catalog.</td><td>Unity Catalog</td></tr>
+      <tr><td><b>AI/BI dashboard</b></td><td>Latency &amp; volume, read from the trace tables.</td><td>Unity Catalog</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- 3 -->
+<section id="ingest">
+  <span class="sec-num">03</span>
+  <h2>Flow 1 — Building the knowledge base</h2>
+  <p>This is the <strong>offline</strong> pipeline: the Lakeflow job <code>sentiva_ingest</code>,
+  a six-task DAG. Two document types (JSON and PDF) travel their own paths, converge into one
+  chunk table, get embedded, and land in Lakebase. It runs once at setup and again whenever the
+  content changes.</p>
+
+  <div class="flow">
+    <div class="step"><div class="sn"></div><div>
+      <div class="sh">Generate source documents</div>
+      <p class="sb">Writes 48 multilingual product docs (JSON) and 3 datasheets (PDF) into the UC Volume. Idempotent — skips if content already exists. (In a real deployment this is where the customer's own content lands.)</p>
+      <div class="tags"><span class="tag">generate_data.py</span><span class="tag d">UC Volume · raw_docs</span></div>
+    </div></div>
+
+    <div class="step"><div class="sn"></div><div>
+      <div class="sh">Load JSON → Delta <span class="muted">(JSON path)</span></div>
+      <p class="sb"><code>read_files()</code> reads the JSON docs into the Delta table <code>docs_json</code> — structured columns for product, language, category, title, body, FAQs.</p>
+      <div class="tags"><span class="tag">01_load_json.sql</span><span class="tag d">Delta · docs_json</span></div>
+    </div></div>
+
+    <div class="step"><div class="sn"></div><div>
+      <div class="sh">Chunk JSON <span class="muted">(JSON path)</span></div>
+      <p class="sb"><code>ai_prep_search(body)</code> splits each doc into search chunks, then <code>variant_explode</code> flattens them into rows of <code>docs_chunks</code>. Each chunk carries two forms — one optimised for embedding, one to return to the reader.</p>
+      <div class="tags"><span class="tag a">ai_prep_search()</span><span class="tag">02_chunk_json.sql</span><span class="tag d">Delta · docs_chunks</span></div>
+    </div></div>
+
+    <div class="step"><div class="sn"></div><div>
+      <div class="sh">Parse PDFs → Delta <span class="muted">(PDF path)</span></div>
+      <p class="sb"><code>ai_parse_document(content)</code> runs OCR and layout parsing over the binary PDFs into <code>docs_parsed</code>; product and language are derived from the filename. This is the OCR showcase — a Japanese datasheet becomes searchable text.</p>
+      <div class="tags"><span class="tag a">ai_parse_document()</span><span class="tag">03_parse_pdf.sql</span><span class="tag d">Delta · docs_parsed</span></div>
+    </div></div>
+
+    <div class="step"><div class="sn"></div><div>
+      <div class="sh">Chunk PDFs → same table <span class="muted">(paths converge)</span></div>
+      <p class="sb"><code>ai_prep_search(parsed)</code> chunks the parsed PDFs and <code>INSERT</code>s them into the <em>same</em> <code>docs_chunks</code> table. From here, JSON- and PDF-sourced chunks are treated identically.</p>
+      <div class="tags"><span class="tag a">ai_prep_search()</span><span class="tag">04_chunk_pdf.sql</span><span class="tag d">Delta · docs_chunks</span></div>
+    </div></div>
+
+    <div class="step"><div class="sn"></div><div>
+      <div class="sh">Embed &amp; load into Lakebase</div>
+      <p class="sb">Reads <code>docs_chunks</code>, sends each chunk's embed-text to <b>Qwen3-Embedding-0.6B</b> (batched), and <code>UPSERT</code>s the row — text, 1024-d vector, metadata — into <b>Lakebase</b> <code>kb.documents</code>. Then it builds the two search indexes and <code>ANALYZE</code>s.</p>
+      <div class="tags"><span class="tag">embed_and_load.py</span><span class="tag a">Qwen3 embedding</span><span class="tag d">Lakebase · kb.documents</span></div>
+    </div></div>
+  </div>
+
+  <div class="note"><b>End state:</b> ~53 chunks in <code>kb.documents</code>, each with <code>content</code>,
+  an <code>embedding vector(1024)</code>, an auto-generated <code>content_tsv</code> keyword column, and two
+  indexes — <code>lakebase_ann</code> (semantic) and <code>lakebase_bm25</code> (keyword). The knowledge base is ready to serve.</div>
+</section>
+
+<!-- 4 -->
+<section id="serve">
+  <span class="sec-num">04</span>
+  <h2>Flow 2 — Answering a question</h2>
+  <p>This is the <strong>online</strong> path, and it runs on every question. It is a
+  <em>tool-calling agent</em>: the model itself decides to look something up, reads the results,
+  then answers — streaming the reply token by token so the first words appear in ~1–2 seconds.</p>
+
+  <div class="flow">
+    <div class="step"><div class="sn"></div><div>
+      <div class="sh">The product site asks</div>
+      <p class="sb">A visitor asks a question on Sentiva's site (simulated by <b>App B</b>). App B posts <code>{ session_id, message }</code> and opens a streaming connection to the agent.</p>
+      <div class="tags"><span class="tag">App B · sentiva-web</span></div>
+    </div></div>
+
+    <div class="step"><div class="sn"></div><div>
+      <div class="sh">App B forwards to the agent</div>
+      <p class="sb">App B is the customer's web tier. It forwards the user's identity token and calls App A's standard <code>/responses</code> endpoint, translating the stream back into the shape its React UI expects.</p>
+      <div class="tags"><span class="tag">→ App A · /responses</span></div>
+    </div></div>
+
+    <div class="step"><div class="sn"></div><div>
+      <div class="sh">The agent decides to search</div>
+      <p class="sb">MLflow AgentServer hands the request to the LangGraph agent. The LLM (via the Gateway) chooses to call the <code>search_knowledge_base</code> tool with a query it forms from the question.</p>
+      <div class="tags"><span class="tag">MLflow AgentServer</span><span class="tag a">create_react_agent</span></div>
+    </div></div>
+
+    <div class="step"><div class="sn"></div><div>
+      <div class="sh">Hybrid retrieval from Lakebase</div>
+      <p class="sb">The tool embeds the query (Qwen3) and runs <b>Lakebase Search</b>: a vector search (<code>lakebase_ann</code>) <em>unioned</em> with a keyword search (<code>lakebase_bm25</code>), then deduped by relevance — returning the top passages plus their source metadata.</p>
+      <div class="tags"><span class="tag d">Lakebase · kb.documents</span><span class="tag a">vector + keyword</span></div>
+    </div></div>
+
+    <div class="step"><div class="sn"></div><div>
+      <div class="sh">The LLM composes the answer</div>
+      <p class="sb">The retrieved passages go back to the model — through the <b>Unity AI Gateway</b>, which meters usage and logs the payload. The model answers <em>using only</em> those passages, in the question's language. Prior turns come from Lakebase memory.</p>
+      <div class="tags"><span class="tag a">Unity AI Gateway → LLM</span><span class="tag d">mem.chat_history</span></div>
+    </div></div>
+
+    <div class="step"><div class="sn"></div><div>
+      <div class="sh">Stream back, remember, and trace</div>
+      <p class="sb">Answer tokens stream to the browser as they're generated; a final event carries the <em>source cards</em> and per-step timings. The turn is saved to memory, and the whole request — retrieval + LLM spans — is written to the MLflow OpenTelemetry trace tables in Unity Catalog.</p>
+      <div class="tags"><span class="tag">SSE stream → UI</span><span class="tag">MLflow OTel → UC</span></div>
+    </div></div>
+  </div>
+
+  <div class="note accent"><b>Why tool-calling, not a fixed pipeline?</b> The agent could be
+  wired to always retrieve. Making retrieval a <em>tool</em> the model invokes is the pattern that
+  scales to real agents — more tools, multi-step reasoning — without changing the serving layer. It
+  is the Databricks-recommended shape for an agent on Apps.</div>
+</section>
+
+<!-- 5 -->
+<section id="depth">
+  <span class="sec-num">05</span>
+  <h2>Key components, in depth</h2>
+  <p>Five components carry the weight of this solution. Each is a first-class Databricks
+  capability chosen for a specific job.</p>
+
+  <h3>Lakebase Search — the knowledge base</h3>
+  <p>Lakebase is serverless Postgres. <strong>Lakebase Search</strong> adds two index types on top:
+  <code>lakebase_ann</code> for semantic vector similarity (pgvector under the hood) and
+  <code>lakebase_bm25</code> for keyword relevance over a generated <code>content_tsv</code> column.
+  Retrieval is <em>hybrid</em> — vector <em>and</em> keyword results merged — so a question phrased
+  differently from the docs still hits, while exact terms (product names, prices) still rank. One
+  Postgres holds both the knowledge base and the agent's memory.</p>
+
+  <h3>Unity AI Gateway — the LLM front door</h3>
+  <p>The agent never calls a model endpoint directly. It calls a <strong>Unity AI Gateway
+  model-service</strong> (<code>dbx_agent_lakebase.rag.sentiva_llm</code>) whose routing destination
+  points at the actual foundation model. This gives three things for free: <b>governed routing</b>
+  (swap the model without touching agent code), <b>usage tracking</b>, and an <b>inference table</b>
+  that logs every request/response payload into Unity Catalog.</p>
+
+  <h3>MLflow AgentServer — the serving layer</h3>
+  <p>App A does not hand-roll a web server. It uses <strong>MLflow AgentServer</strong>
+  (<code>databricks-agents</code>) — an async FastAPI server that provides the standard endpoints
+  (<code>/responses</code>, <code>/invocations</code>, <code>/health</code>), streaming, and tracing
+  hooks. The agent is written as MLflow <code>@invoke</code>/<code>@stream</code> handlers over the
+  <code>ResponsesAgent</code> interface. This is the platform's paved path for authoring an agent and
+  deploying it on Databricks Apps.</p>
+
+  <h3>MLflow tracing in OpenTelemetry format</h3>
+  <p>Every request is traced. Because the MLflow experiment is bound to a <strong>Unity Catalog trace
+  location</strong>, spans land as governed Delta tables in OpenTelemetry format — <code>*_otel_spans</code>
+  and companions — alongside higher-level per-trace views. Each trace shows the <code>retrieval</code>
+  and <code>ChatDatabricks</code> steps with timing, which the AI/BI dashboard reads directly.</p>
+
+  <h3>Agent memory in Lakebase</h3>
+  <p>Multi-turn context is kept in <code>mem.chat_history</code>, keyed by <code>session_id</code>. On
+  each turn the agent loads recent history and, after answering, appends the new exchange — so
+  follow-ups like "which of those plans includes a VPN?" resolve against the earlier turn.</p>
+</section>
+
+<!-- 6 -->
+<section id="requirements">
+  <span class="sec-num">06</span>
+  <h2>Requirements → implementation</h2>
+  <p>The solution was built to fourteen requirements. Each maps to a concrete component above.</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>#</th><th>Requirement</th><th>How it is met</th><th></th></tr></thead>
+    <tbody>
+      <tr><td><span class="rq">1</span></td><td>End-to-end deploy &amp; clean teardown</td><td>Databricks Asset Bundles (<code>databricks.yml</code> + <code>resources/*.yml</code>) + scripted stages; <code>teardown.sh</code> + <code>verify_teardown.sh</code>.</td><td><span class="ok">✓</span></td></tr>
+      <tr><td><span class="rq">2</span></td><td>Agent deployed on a Databricks App</td><td>App A hosts the agent via <b>MLflow AgentServer</b>.</td><td><span class="ok">✓</span></td></tr>
+      <tr><td><span class="rq">3</span></td><td>Agent logs in OpenTelemetry format on UC</td><td>MLflow experiment bound to a UC trace location → <code>sentiva_otel_*</code> + trace tables.</td><td><span class="ok">✓</span></td></tr>
+      <tr><td><span class="rq">4</span></td><td>Agent memory in Lakebase</td><td><code>mem.chat_history</code>, keyed by <code>session_id</code>.</td><td><span class="ok">✓</span></td></tr>
+      <tr><td><span class="rq">5</span></td><td>Knowledge base in Lakebase Search; multilingual raw docs in a Volume</td><td><code>kb.documents</code> with <code>lakebase_ann</code>+<code>lakebase_bm25</code>; JSON in <code>raw_docs</code>.</td><td><span class="ok">✓</span></td></tr>
+      <tr><td><span class="rq">6</span></td><td>Job loading JSON → Delta</td><td><code>sentiva_ingest</code> task <code>load_json</code> → <code>docs_json</code>.</td><td><span class="ok">✓</span></td></tr>
+      <tr><td><span class="rq">7</span></td><td>PDFs + OCR → Delta → Lakebase</td><td><code>ai_parse_document</code> → <code>docs_parsed</code> → chunk → embed → Lakebase.</td><td><span class="ok">✓</span></td></tr>
+      <tr><td><span class="rq">8</span></td><td>Embedding = Qwen3-Embedding-0.6B</td><td>1024-d vectors from the serving endpoint.</td><td><span class="ok">✓</span></td></tr>
+      <tr><td><span class="rq">9</span></td><td>LLM via Unity AI Gateway</td><td>Gateway model-service fronts a Databricks foundation model.</td><td><span class="ok">✓</span></td></tr>
+      <tr><td><span class="rq">10</span></td><td>Gateway usage tracking + inference table</td><td>Payload logging into <code>llm_inference_payload</code>.</td><td><span class="ok">✓</span></td></tr>
+      <tr><td><span class="rq">11</span></td><td>React web simulator UI</td><td>App B <code>sentiva-web</code> with multilingual quick-question cards, streaming answers, source cards.</td><td><span class="ok">✓</span></td></tr>
+      <tr><td><span class="rq">12</span></td><td>Deployment &amp; demo docs</td><td><code>docs/DEPLOYMENT.md</code>, <code>docs/DEMO.md</code>, this document.</td><td><span class="ok">✓</span></td></tr>
+      <tr><td><span class="rq">13</span></td><td>AI/BI dashboard from trace logs</td><td><code>sentiva_agent_perf</code> reads <code>sentiva_otel_spans</code>.</td><td><span class="ok">✓</span></td></tr>
+      <tr><td><span class="rq">14</span></td><td>Test suite</td><td>13 end-to-end checks (<code>tests/</code>) + <code>test_all.sh</code>.</td><td><span class="ok">✓</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="note"><b>On requirement 9's model:</b> a tool-calling agent needs a model whose
+  tool-call format round-trips through the Gateway's unified API. Reasoning models such as Gemini
+  2.5/3.x drop a required <code>thought_signature</code> on tool calls, so the default is
+  <code>databricks-deepseek-v4-flash-0731</code> — still fronted by the same Unity AI Gateway.
+  <code>scripts/test_model.sh</code> probes any candidate before you swap.</div>
+</section>
+
+<!-- 7 -->
+<section id="lifecycle">
+  <span class="sec-num">07</span>
+  <h2>Deploy, configure, tear down</h2>
+  <p>The entire solution targets a fresh workspace by editing <strong>one file</strong>,
+  <code>config.env</code>, and running ordered stages. Two steps must be enabled once in the
+  workspace UI (they have no CLI); a state-aware preflight verifies them.</p>
+
+  <div class="two">
+    <div>
+      <h3>Stages, in order</h3>
+      <div class="flow">
+        <div class="step"><div class="sn"></div><div><div class="sh">Configure</div><p class="sb"><code>setup_config.sh</code> fills <code>config.env</code>; <code>preflight.sh</code> checks tools, auth, warehouse, models.</p></div></div>
+        <div class="step"><div class="sn"></div><div><div class="sh">Bootstrap</div><p class="sb"><code>bootstrap.sh</code> creates the catalog and a fresh Lakebase project.</p></div></div>
+        <div class="step"><div class="sn"></div><div><div class="sh">UI toggles</div><p class="sb">Enable <b>Lakebase Search</b> on the project and the <b>AI Prep Search</b> preview.</p></div></div>
+        <div class="step"><div class="sn"></div><div><div class="sh">Search init</div><p class="sb"><code>bootstrap_search.sh</code> installs extensions and creates the <code>kb</code>/<code>mem</code> schemas.</p></div></div>
+        <div class="step"><div class="sn"></div><div><div class="sh">Deploy</div><p class="sb"><code>deploy.sh</code> ships the bundle, creates the Gateway service, grants the app, and starts both Apps.</p></div></div>
+        <div class="step"><div class="sn"></div><div><div class="sh">Ingest</div><p class="sb">Run <code>sentiva_ingest</code> to populate the knowledge base.</p></div></div>
+      </div>
+    </div>
+    <div>
+      <h3>Configure &amp; swap the model</h3>
+      <p>The agent always calls the Gateway service by name, so the model is chosen at the Gateway,
+      not in code. To switch models:</p>
+      <pre><span class="c"># 1 — verify it can drive the tool-calling agent</span>
+./scripts/test_model.sh \
+   databricks-claude-opus-4-8
+
+<span class="c"># 2 — set it and recreate the gateway</span>
+LLM_ENDPOINT=<span class="mono">databricks-…</span>
+./scripts/create_gateway.sh</pre>
+      <p class="muted">No agent or UI code changes. Verified swappable to deepseek, Claude, and GLM;
+      reasoning models are rejected by the probe.</p>
+
+      <h3>Tear down cleanly</h3>
+      <p>Cost is bounded by teardown: <code>teardown.sh</code> destroys the bundle resources, the
+      Gateway service, the inference table, the Lakebase project, and the MLflow experiment;
+      <code>verify_teardown.sh</code> confirms nothing billable remains.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 8 -->
+<section id="decisions">
+  <span class="sec-num">08</span>
+  <h2>Design decisions &amp; trade-offs</h2>
+  <p>The choices below are the ones a first-time reader most often asks about.</p>
+
+  <h3>AgentServer over a hand-rolled server</h3>
+  <p>Serving, streaming, and trace wiring are things the platform provides. Using MLflow
+  AgentServer means none of that is hand-written — the "best practice" is that you <em>don't</em>
+  build it yourself. The trade-off is a heavier dependency stack, pinned to a known-good set.</p>
+
+  <h3>Hybrid retrieval, not vector-only</h3>
+  <p>Pure vector search misses exact terms (a product name, a price); pure keyword search misses
+  paraphrases. Running both and merging is more robust for a product-support corpus — and Lakebase
+  gives both in one store.</p>
+
+  <h3>A non-reasoning model for the tool loop</h3>
+  <p>Tool-calling requires the model's tool-call format to survive a round-trip through the Gateway.
+  Reasoning models (Gemini 2.5/3.x, GPT-5.x) don't, so the default is a fast non-reasoning model.
+  The Gateway keeps this a config choice, not a code change.</p>
+
+  <h3>React UI kept behind a stable contract</h3>
+  <p>App A speaks the standard <code>/responses</code> protocol; App B translates it to the simple
+  <code>{token}</code> / <code>{done}</code> stream the React UI consumes. The web tier absorbs the
+  protocol, exactly as a real product website would — so the UI stays simple and stable.</p>
+
+  <h3>Teardown completeness</h3>
+  <p>Some objects live outside the bundle — the Gateway service, the inference table, the Lakebase
+  project, and the MLflow experiment (which lives in the workspace, not the catalog). Teardown
+  removes all of them, and a stale experiment is deleted specifically so the next deploy re-creates
+  its trace tables cleanly.</p>
+</section>
+
+</main>
+
+<footer>
+  <b>Sentiva RAG Agent</b> — Databricks solution architecture reference.
+  All brand names and documents are synthetic demo content. &nbsp;·&nbsp;
+  <b>Stack:</b> Asset Bundles · Lakebase Search · Unity AI Gateway · MLflow AgentServer · Qwen3 · LangGraph
+</footer>
+
+</div>
+</body>
+</html>
