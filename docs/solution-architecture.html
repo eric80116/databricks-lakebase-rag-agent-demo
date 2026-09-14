@@ -90,7 +90,14 @@ strong{font-weight:600;}
 code,.mono{font-family:"IBM Plex Mono",monospace; font-size:.86em;}
 p code,li code,td code{background:var(--surface-2); border:1px solid var(--line);
   padding:1px 6px; border-radius:5px; color:var(--accent-ink); white-space:nowrap;}
-a.ext{color:var(--accent-ink);}
+a.ext{color:var(--accent-ink); text-decoration:none; border-bottom:1px solid var(--line-2);
+  padding-bottom:.5px; transition:border-color .12s;}
+a.ext:hover{border-bottom-color:var(--accent);}
+a.ext:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:2px;}
+a.ext::after{content:"↗"; font-size:.72em; margin-left:2px; color:var(--faint); vertical-align:super;}
+td a.ext{white-space:normal;}
+.reading{margin-top:8px; font-size:13.5px; color:var(--muted);}
+.reading a.ext{margin-right:2px;}
 
 /* callout */
 .note{background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--data);
@@ -276,21 +283,21 @@ footer b{color:var(--muted); font-weight:500;}
 
   <div class="tablewrap">
   <table>
-    <thead><tr><th>Component</th><th>What it is</th><th>Where it lives</th></tr></thead>
+    <thead><tr><th>Component</th><th>What it is</th><th>Docs</th></tr></thead>
     <tbody>
-      <tr><td><b>UC Volume</b> <code>raw_docs</code></td><td>Landing zone for the raw source documents (48 multilingual JSON files + 3 PDFs).</td><td>Unity Catalog</td></tr>
-      <tr><td><b>Delta tables</b></td><td><code>docs_json</code> (loaded JSON), <code>docs_parsed</code> (OCR'd PDFs), <code>docs_chunks</code> (both, chunked).</td><td>Unity Catalog</td></tr>
-      <tr><td><b>ai_parse_document()</b></td><td>SQL AI function — OCR &amp; layout parsing of PDFs into structured text.</td><td>Serverless SQL warehouse</td></tr>
-      <tr><td><b>ai_prep_search()</b></td><td>SQL AI function — splits a document into retrieval chunks (a version to embed + a version to return).</td><td>Serverless SQL warehouse</td></tr>
-      <tr><td><b>Qwen3-Embedding-0.6B</b></td><td>Embedding model — turns chunk text into 1024-dimension vectors.</td><td>Model serving endpoint</td></tr>
-      <tr><td><b>Lakebase</b> <code>kb.documents</code></td><td>The knowledge base. One row per chunk, with a vector + a keyword index — <b>Lakebase Search</b>.</td><td>Lakebase (Postgres)</td></tr>
-      <tr><td><b>Lakebase</b> <code>mem.chat_history</code></td><td>Per-session conversation memory, keyed by <code>session_id</code>.</td><td>Lakebase (Postgres)</td></tr>
-      <tr><td><b>Unity AI Gateway</b></td><td>A model-service that fronts the LLM: routing, usage metering, and payload logging.</td><td>Unity Catalog govern.</td></tr>
-      <tr><td><b>The agent</b></td><td>A LangGraph <code>create_react_agent</code> with one tool (knowledge-base search), served through MLflow AgentServer.</td><td>App A</td></tr>
-      <tr><td><b>App A</b> <code>sentiva-agent-api</code></td><td>MLflow AgentServer — the FastAPI serving layer exposing <code>/responses</code>.</td><td>Databricks App</td></tr>
-      <tr><td><b>App B</b> <code>sentiva-web</code></td><td>React UI simulating Sentiva's product website; proxies to App A.</td><td>Databricks App</td></tr>
-      <tr><td><b>MLflow tracing</b></td><td>Per-request spans stored in OpenTelemetry format inside Unity Catalog.</td><td>Unity Catalog</td></tr>
-      <tr><td><b>AI/BI dashboard</b></td><td>Latency &amp; volume, read from the trace tables.</td><td>Unity Catalog</td></tr>
+      <tr><td><b>UC Volume</b> <code>raw_docs</code></td><td>Landing zone for the raw source documents (48 multilingual JSON files + 3 PDFs).</td><td><a class="ext" href="https://docs.databricks.com/aws/en/volumes/" target="_blank" rel="noopener">Volumes</a></td></tr>
+      <tr><td><b>Delta tables</b></td><td><code>docs_json</code> (loaded JSON), <code>docs_parsed</code> (OCR'd PDFs), <code>docs_chunks</code> (both, chunked). Loaded with <code>read_files()</code>.</td><td><a class="ext" href="https://docs.databricks.com/aws/en/sql/language-manual/functions/read_files" target="_blank" rel="noopener">read_files</a></td></tr>
+      <tr><td><b>ai_parse_document()</b></td><td>SQL AI function — OCR &amp; layout parsing of PDFs into structured text.</td><td><a class="ext" href="https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_parse_document" target="_blank" rel="noopener">ai_parse_document</a></td></tr>
+      <tr><td><b>ai_prep_search()</b></td><td>SQL AI function — splits a document into retrieval chunks (a version to embed + a version to return).</td><td><a class="ext" href="https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_prep_search" target="_blank" rel="noopener">ai_prep_search</a></td></tr>
+      <tr><td><b>Qwen3-Embedding-0.6B</b></td><td>Embedding model — turns chunk text into 1024-dimension vectors.</td><td><a class="ext" href="https://docs.databricks.com/aws/en/machine-learning/foundation-models/" target="_blank" rel="noopener">Foundation Models</a></td></tr>
+      <tr><td><b>Lakebase</b> <code>kb.documents</code></td><td>The knowledge base. One row per chunk, with a vector + a keyword index — <b>Lakebase Search</b>.</td><td><a class="ext" href="https://docs.databricks.com/aws/en/oltp/" target="_blank" rel="noopener">Lakebase</a></td></tr>
+      <tr><td><b>Lakebase</b> <code>mem.chat_history</code></td><td>Per-session conversation memory, keyed by <code>session_id</code>.</td><td><a class="ext" href="https://docs.databricks.com/aws/en/oltp/" target="_blank" rel="noopener">Lakebase</a></td></tr>
+      <tr><td><b>Unity AI Gateway</b></td><td>A model-service that fronts the LLM: routing, usage metering, and payload logging.</td><td><a class="ext" href="https://docs.databricks.com/aws/en/ai-gateway/" target="_blank" rel="noopener">AI Gateway</a></td></tr>
+      <tr><td><b>The agent</b></td><td>A LangGraph <code>create_react_agent</code> with one tool (knowledge-base search), served through MLflow AgentServer.</td><td><a class="ext" href="https://docs.databricks.com/aws/en/generative-ai/agent-framework/author-agent" target="_blank" rel="noopener">Author agent</a></td></tr>
+      <tr><td><b>App A</b> <code>sentiva-agent-api</code></td><td>MLflow AgentServer — the FastAPI serving layer exposing <code>/responses</code> (the <code>ResponsesAgent</code> interface).</td><td><a class="ext" href="https://mlflow.org/docs/latest/genai/flavors/responses-agent-intro/" target="_blank" rel="noopener">ResponsesAgent</a></td></tr>
+      <tr><td><b>App B</b> <code>sentiva-web</code></td><td>React UI simulating Sentiva's product website; proxies to App A.</td><td><a class="ext" href="https://docs.databricks.com/aws/en/dev-tools/databricks-apps/" target="_blank" rel="noopener">Databricks Apps</a></td></tr>
+      <tr><td><b>MLflow tracing</b></td><td>Per-request spans stored in OpenTelemetry format inside Unity Catalog.</td><td><a class="ext" href="https://docs.databricks.com/aws/en/mlflow3/genai/tracing/" target="_blank" rel="noopener">MLflow Tracing</a></td></tr>
+      <tr><td><b>AI/BI dashboard</b></td><td>Latency &amp; volume, read from the trace tables.</td><td><a class="ext" href="https://docs.databricks.com/aws/en/dashboards/" target="_blank" rel="noopener">AI/BI</a></td></tr>
     </tbody>
   </table>
   </div>
@@ -300,10 +307,11 @@ footer b{color:var(--muted); font-weight:500;}
 <section id="ingest">
   <span class="sec-num">03</span>
   <h2>Flow 1 — Building the knowledge base</h2>
-  <p>This is the <strong>offline</strong> pipeline: the Lakeflow job <code>sentiva_ingest</code>,
-  a six-task DAG. Two document types (JSON and PDF) travel their own paths, converge into one
-  chunk table, get embedded, and land in Lakebase. It runs once at setup and again whenever the
-  content changes.</p>
+  <p>This is the <strong>offline</strong> pipeline: the
+  <a class="ext" href="https://docs.databricks.com/aws/en/jobs/" target="_blank" rel="noopener">Lakeflow job</a>
+  <code>sentiva_ingest</code>, a six-task DAG. Two document types (JSON and PDF) travel their own
+  paths, converge into one chunk table, get embedded, and land in Lakebase. It runs once at setup
+  and again whenever the content changes.</p>
 
   <div class="flow">
     <div class="step"><div class="sn"></div><div>
@@ -451,7 +459,7 @@ footer b{color:var(--muted); font-weight:500;}
   <table>
     <thead><tr><th>#</th><th>Requirement</th><th>How it is met</th><th></th></tr></thead>
     <tbody>
-      <tr><td><span class="rq">1</span></td><td>End-to-end deploy &amp; clean teardown</td><td>Databricks Asset Bundles (<code>databricks.yml</code> + <code>resources/*.yml</code>) + scripted stages; <code>teardown.sh</code> + <code>verify_teardown.sh</code>.</td><td><span class="ok">✓</span></td></tr>
+      <tr><td><span class="rq">1</span></td><td>End-to-end deploy &amp; clean teardown</td><td><a class="ext" href="https://docs.databricks.com/aws/en/dev-tools/bundles/" target="_blank" rel="noopener">Asset Bundles</a> (<code>databricks.yml</code> + <code>resources/*.yml</code>) + scripted stages; <code>teardown.sh</code> + <code>verify_teardown.sh</code>.</td><td><span class="ok">✓</span></td></tr>
       <tr><td><span class="rq">2</span></td><td>Agent deployed on a Databricks App</td><td>App A hosts the agent via <b>MLflow AgentServer</b>.</td><td><span class="ok">✓</span></td></tr>
       <tr><td><span class="rq">3</span></td><td>Agent logs in OpenTelemetry format on UC</td><td>MLflow experiment bound to a UC trace location → <code>sentiva_otel_*</code> + trace tables.</td><td><span class="ok">✓</span></td></tr>
       <tr><td><span class="rq">4</span></td><td>Agent memory in Lakebase</td><td><code>mem.chat_history</code>, keyed by <code>session_id</code>.</td><td><span class="ok">✓</span></td></tr>
