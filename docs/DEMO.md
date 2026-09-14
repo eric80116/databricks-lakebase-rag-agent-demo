@@ -25,14 +25,20 @@ Placeholders below:
 4. Under each reply you can expand **Sources** (retrieved KB chunks: product / language / source), and see **timings** (retrieval / LLM / total ms) and the **trace_id** (links to the MLflow trace).
 5. Conversations have **memory**: follow-up questions in the same session use prior context (stored in Lakebase `mem.chat_history`).
 
-## 2. Interact via the API (App A — the endpoint a product website integrates with)
-Endpoint: `POST https://<app-a-url>/api/chat`
+## 2. Interact via the API (the endpoint a product website integrates with)
+
+The **agent** (App A) runs on MLflow AgentServer and serves the standard
+`POST https://<app-a-url>/responses` (MLflow `ResponsesAgent` / OpenAI-Responses interface,
+streaming + non-streaming). The **web tier** (App B) proxies it and exposes a simpler shape —
+the easiest way to try it from a terminal:
+
+Endpoint: `POST https://<app-b-url>/api/chat`
 
 ```bash
 # get a token (or just use App B's "Copy token" button)
 TOKEN=$(databricks auth token --profile <your-profile> | python3 -c "import json,sys;print(json.load(sys.stdin)['access_token'])")
 # single-line command (avoids line-continuation being split by the shell)
-curl -s -X POST "https://<app-a-url>/api/chat" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{"session_id":"demo-001","message":"Sentiva Shield の料金プランを教えて"}' | python3 -m json.tool
+curl -s -X POST "https://<app-b-url>/api/chat" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{"session_id":"demo-001","message":"Sentiva Shield の料金プランを教えて"}' | python3 -m json.tool
 ```
 > App B's **Developer / API access** panel has a "Copy runnable command" button that copies a
 > single-line command with the token already embedded — paste and run.
@@ -46,16 +52,17 @@ Response:
   "trace_id": "tr-…"
 }
 ```
-Health check: `GET https://<app-a-url>/api/health`.
+Health check: `GET https://<app-b-url>/api/health` (App A's is `GET /health`).
 
-> Product-web integration: call `/api/chat` the same way and pass your own conversation id as
-> `session_id` to keep memory across turns.
+> Product-web integration: a product site can call **App A's `/responses`** directly (standard
+> agent protocol — sources/timings ride in `custom_outputs`), or **App B's `/api/chat`** for the
+> simple shape above. Either way, pass your own conversation id as `session_id` to keep memory.
 
 ---
 
 ## 3. Track quality & per-step latency (MLflow tracing, #3)
-Every `/api/chat` call produces an MLflow **trace** (OpenTelemetry spans) with sub-spans for
-**retrieval**, **LLM call**, etc., capturing token usage and per-step timing.
+Every request produces an MLflow **trace** (OpenTelemetry spans) with sub-spans for
+**retrieval**, the **LLM call** (`ChatDatabricks`), etc., capturing token usage and per-step timing.
 
 ### 3.1 Inspect a single Q&A in the MLflow UI
 - Workspace → **Experiments** → select the experiment (default `/Shared/sentiva-rag-traces`) → **Traces** tab.

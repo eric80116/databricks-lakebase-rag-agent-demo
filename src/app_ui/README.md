@@ -103,43 +103,32 @@ npm run dev
 
 ## API Contract
 
-The app expects the agent API to implement:
+App B is the web tier. Its React UI calls the endpoints below; internally the server proxies
+to **App A's `POST /responses`** (MLflow AgentServer / `ResponsesAgent`) and translates the
+standard protocol into the simple shapes here.
 
-### `POST /api/chat`
-Request:
-```json
-{
-  "session_id": "uuid-string",
-  "message": "user question"
-}
-```
+### `POST /api/chat/stream` (used by the UI)
+Request: `{ "session_id": "uuid-string", "message": "user question" }`.
+Responds with **Server-Sent Events**: `data: {"type":"token","text":"…"}` per token, then a
+final `data: {"type":"done","sources":[…],"timings":{…},"trace_id":"…"}`.
 
-Response:
+### `POST /api/chat` (non-streaming, same request)
+Aggregates the stream into one JSON response:
 ```json
 {
   "answer": "answer text",
   "sources": [
-    {
-      "title": "Source Title",
-      "source_uri": "https://example.com/...",
-      "product": "Shield|Alert|Family|ID|Scan",
-      "lang": "en|ja|fr|de|..."
-    }
+    { "title": "Source Title", "source_uri": "sentiva-kb://…",
+      "product": "Shield|Alert|Family|ID|Scan", "lang": "en|ja|fr|de" }
   ],
-  "timings": {
-    "retrieval_ms": 45,
-    "llm_ms": 230,
-    "total_ms": 275
-  },
+  "timings": { "retrieval_ms": 45, "llm_ms": 230, "total_ms": 275 },
   "trace_id": "trace-uuid"
 }
 ```
 
-### `GET /api/health`
-Response:
-```json
-{ "status": "ok" }
-```
+### Helpers
+`GET /api/health` → `{ "status": "ok" }` · `GET /api/info` (agent URL) ·
+`GET /api/token` (short-lived bearer token for the Developer panel).
 
 ## Databricks App Deployment
 

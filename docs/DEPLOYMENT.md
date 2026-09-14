@@ -13,7 +13,7 @@ cleanly. **To target a different workspace, you only edit `config.env`.**
 - **Unity AI Gateway** model-service `dbx_agent_lakebase.rag.sentiva_llm` → the LLM; usage tracking + inference table. Swap the model by changing `LLM_ENDPOINT` (the gateway's routing destination) — the agent is model-agnostic.
 - **Models**: LLM defaults to `databricks-deepseek-v4-flash-0731`; embedding `databricks-qwen3-embedding-0-6b` (1024-dim). Note: the tool-calling agent needs a model whose tool-call format round-trips through the gateway (deepseek / Llama / Mistral); Gemini 2.5/3.x reasoning models drop their thought_signature on tool calls.
 - **Job** `sentiva_ingest`: generate → load JSON → `ai_parse_document` / `ai_prep_search` chunking → embed → Lakebase + build indexes.
-- **Apps**: App A `sentiva-agent-api` (FastAPI + MLflow ResponsesAgent wrapping a LangGraph `create_react_agent` — retrieval is a tool; LLM via `ChatDatabricks` → the gateway; `/api/chat`); App B `sentiva-web` (React UI).
+- **Apps**: App A `sentiva-agent-api` (**MLflow AgentServer** hosting a LangGraph `create_react_agent` — retrieval is a tool; LLM via `ChatDatabricks` → the gateway; serves `/responses`, `/invocations`, `/health`); App B `sentiva-web` (React web tier — proxies to App A, exposes `/api/chat` + `/api/chat/stream`).
 - **Observability**: MLflow 3 traces stored in OpenTelemetry format in Unity Catalog + an AI/BI dashboard `sentiva_agent_perf`.
 
 ---

@@ -30,9 +30,9 @@ flowchart LR
   subgraph Serve["② Serving"]
     direction TB
     web["Product web / App B (React UI)"]
-    appA["App A · FastAPI + ResponsesAgent<br/>(LangGraph tool-calling)"]
+    appA["App A · MLflow AgentServer<br/>(LangGraph tool-calling agent)"]
     gw["Unity AI Gateway<br/>→ LLM (deepseek-v4-flash)"]
-    web -->|POST /api/chat| appA
+    web -->|POST /responses| appA
     appA -->|LLM| gw
   end
 
@@ -55,7 +55,7 @@ flowchart LR
 
 | Area | Detail |
 |---|---|
-| **Agent** | MLflow `ResponsesAgent` + LangGraph `create_react_agent` (tool-calling) + FastAPI, deployed as a Databricks App, with per-request MLflow tracing. Retrieval is a tool; the model is swappable via config |
+| **Agent** | **MLflow AgentServer** hosting a LangGraph `create_react_agent` (tool-calling), deployed as a Databricks App, with per-request MLflow tracing. Retrieval is a tool; the model is swappable via config |
 | **Knowledge base** | **Lakebase Search** — `lakebase_vector` (ANN) + `lakebase_text` (BM25) hybrid retrieval |
 | **Memory** | Lakebase (Postgres) chat history; multi-turn context |
 | **Ingestion job** | generate → load JSON → `ai_parse_document` (PDF OCR) → `ai_prep_search` chunking → embed → Lakebase + build indexes |
@@ -67,35 +67,34 @@ flowchart LR
 
 ## API
 
-The agent runs as **App A** (`sentiva-agent-api`) and exposes:
+The agent runs as **App A** (`sentiva-agent-api`) on **MLflow AgentServer**, which exposes
+the standard endpoints. **App B** (`sentiva-web`) is the web tier: it proxies to App A and
+offers a simplified contract for its React UI (and for a product website).
 
-### `POST /api/chat`
-Request:
+### App A — `POST /responses` (the agent)
+Standard MLflow `ResponsesAgent` / OpenAI-Responses interface, streaming (SSE) and
+non-streaming. Request:
 ```json
-{ "session_id": "any-conversation-id", "message": "How much does Sentiva Shield cost?" }
+{ "input": [{ "role": "user", "content": "How much does Sentiva Shield cost?" }],
+  "custom_inputs": { "session_id": "any-conversation-id" }, "stream": true }
 ```
-Response:
+Answer text streams as `response.output_text.delta` events; retrieval **sources** and
+per-step **timings** ride in a final `response.custom_outputs` event (and in the
+non-streaming response's `custom_outputs`). Also serves `POST /invocations` and `GET /health`.
+Pass the same `session_id` across turns to keep memory; authenticate with a workspace bearer
+token (`Authorization: Bearer <token>`).
+
+### App B — `POST /api/chat` and `POST /api/chat/stream` (the web tier)
+App B translates App A's protocol into the simple shape its UI consumes:
 ```json
-{
-  "answer": "…answer in the question's language…",
-  "sources": [{ "title": "…", "source_uri": "…", "product": "Sentiva Shield", "lang": "en" }],
-  "timings": { "retrieval_ms": 120, "llm_ms": 640, "total_ms": 780 },
-  "trace_id": "…"
-}
+// POST /api/chat  ->  { session_id, message }  ->
+{ "answer": "…", "sources": [{ "title": "…", "source_uri": "…", "product": "…", "lang": "en" }],
+  "timings": { "retrieval_ms": 120, "llm_ms": 640, "total_ms": 780 }, "trace_id": "…" }
 ```
-Pass the same `session_id` across turns to keep memory. Authenticate with a workspace
-bearer token (`Authorization: Bearer <token>`).
-
-### `POST /api/chat/stream`
-Same request body; responds with **Server-Sent Events** for low latency (first token in
-~1–2s): `data: {"type":"token","text":"…"}` per token, then a final
-`data: {"type":"done","sources":[…],"timings":{…},"trace_id":"…"}`. The React UI uses this.
-
-### `GET /api/health` → `{ "status": "ok" }`
-
-**App B** (`sentiva-web`, React UI) proxies to App A and adds helper endpoints:
-`GET /api/info` (agent URL) and `GET /api/token` (a short-lived bearer token for the
-Developer panel's copy-to-clipboard). App B also proxies `/api/chat` and `/api/chat/stream`.
+`POST /api/chat/stream` returns **Server-Sent Events** for low latency (first token in ~1–2s):
+`data: {"type":"token","text":"…"}` per token, then `data: {"type":"done","sources":[…],"timings":{…}}`.
+App B also exposes `GET /api/health`, `GET /api/info` (agent URL), and `GET /api/token`
+(short-lived bearer token for the Developer panel).
 
 ## Repo layout
 
@@ -104,15 +103,20 @@ databricks.yml            DAB bundle (jobs / apps / dashboard / schema / volume)
 config.env.example        the single per-environment config (copy to config.env)
 resources/                DAB resource definitions
 scripts/                  preflight, bootstrap, deploy, grants, teardown, test_all
-src/app_agent/            App A — MLflow ResponsesAgent + LangGraph tool-calling + FastAPI
-src/app_ui/               App B — React UI + FastAPI proxy
+src/app_agent/            App A — MLflow AgentServer + LangGraph tool-calling agent
+src/app_ui/               App B — React UI + FastAPI proxy (web tier)
 src/jobs/ + src/data_gen/ ingestion pipeline + synthetic multilingual doc generators
 dashboards/               AI/BI dashboard definition
 tests/                    pytest end-to-end suite (13 checks)
-docs/                     DEPLOYMENT.md · DEMO.md
+docs/                     DEPLOYMENT.md · DEMO.md · solution-architecture.html
 ```
 
 ## Deploy / run / test
+
+New here? Start with the **[Solution Architecture](https://raw.githack.com/eric80116/databricks-lakebase-rag-agent-demo/main/docs/solution-architecture.html)**
+— a structured, first-read walkthrough of the components, requirement mapping, and both data
+flows (source at [docs/solution-architecture.html](docs/solution-architecture.html); GitHub
+shows it as source, the link above renders it).
 
 See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for the full, ordered steps (including the two
 manual UI toggles in its Prerequisites) and **[docs/DEMO.md](docs/DEMO.md)** for the demo
