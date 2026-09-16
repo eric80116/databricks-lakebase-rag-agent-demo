@@ -184,8 +184,36 @@ const Chat: React.FC = () => {
     handleSendMessage(question)
   }
 
+  // Start a fresh conversation: new session_id (so Lakebase memory starts clean) + clear UI.
+  const handleNewConversation = useCallback(() => {
+    if (loading) return
+    const id = uuidv4()
+    setSessionId(id)
+    try {
+      localStorage.setItem('sentiva_session_id', id)
+    } catch {
+      /* storage may be unavailable */
+    }
+    setMessages([])
+    setShowSuggestions(true)
+    setError(null)
+    setInput('')
+  }, [loading])
+
   return (
     <div className="chat-container">
+      {messages.length > 0 && (
+        <div className="chat-toolbar">
+          <button
+            className="new-chat-btn"
+            onClick={handleNewConversation}
+            disabled={loading}
+            title="Start a new conversation (clears memory)"
+          >
+            <span aria-hidden="true">＋</span> New chat
+          </button>
+        </div>
+      )}
       <div className="messages-area">
         {error && <div className="error-toast">{error}</div>}
 

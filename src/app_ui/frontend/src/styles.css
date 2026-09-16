@@ -90,6 +90,41 @@ body {
   overflow: hidden;
 }
 
+/* Toolbar (New chat) */
+.chat-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.5rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-light);
+}
+.new-chat-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--primary);
+  background: var(--bg-light);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.new-chat-btn:hover:not(:disabled) {
+  background: var(--bg-alt);
+  border-color: var(--primary);
+}
+.new-chat-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.new-chat-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
 /* Messages Area */
 .messages-area {
   flex: 1;
